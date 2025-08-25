@@ -1,146 +1,233 @@
+-- Services
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
 
--- Variável para guardar localização customizada
-local customPosition = nil
+-- Constants
+local GUI_CONFIG = {
+    MAIN_SIZE = UDim2.new(0, 280, 0, 275),
+    MINIMIZED_SIZE = UDim2.new(0, 280, 0, 40),
+    TITLE = "🧠 Steal A Brainrot",
+    COLORS = {
+        BACKGROUND = Color3.fromRGB(25, 25, 35),
+        TITLE = Color3.fromRGB(255, 100, 150),
+        STEAL = Color3.fromRGB(255, 60, 60),
+        DOWN = Color3.fromRGB(60, 150, 255),
+        MARK = Color3.fromRGB(60, 255, 60),
+        HOP = Color3.fromRGB(255, 165, 0)
+    }
+}
 
-local function setCustomLocation()
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        customPosition = char.HumanoidRootPart.Position
-        print("Localização salva:", customPosition)
-    end
+local STEAL_CONFIG = {
+    STEP_SIZE = 0.85,
+    STEP_DELAY = 0.10,
+    VERTICAL_OFFSET = 200
+}
+
+-- Class definition
+local StealBrainrot = {}
+StealBrainrot.__index = StealBrainrot
+
+function StealBrainrot.new()
+    local self = setmetatable({}, StealBrainrot)
+    self.player = Players.LocalPlayer
+    self.markPosition = nil
+    self.isStealActive = false
+    self.isMinimized = false
+    
+    self:initializeCharacter()
+    self:createGui()
+    self:setupConnections()
+    
+    return self
 end
 
-local function teleportCustom()
-    local char = LocalPlayer.Character
-    if customPosition and char and char:FindFirstChild("HumanoidRootPart") then
-        char.HumanoidRootPart.CFrame = CFrame.new(customPosition)
-        print("Teleportado para localização salva!")
-    else
-        warn("Nenhuma localização foi salva ainda!")
-    end
+function StealBrainrot:initializeCharacter()
+    self.character = self.player.Character or self.player.CharacterAdded:Wait()
+    self.rootPart = self.character:WaitForChild("HumanoidRootPart")
 end
 
-local function superJump()
-    local char = LocalPlayer.Character
-    if char then
-        local hum = char:FindFirstChildWhichIsA("Humanoid")
-        if hum then
-            hum.JumpPower = 120
-            hum:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end
+function StealBrainrot:createGui()
+    self.gui = {}
+    
+    -- Create main GUI elements
+    self.gui.screenGui = Instance.new("ScreenGui")
+    self.gui.screenGui.Name = "StealBrainRotGui"
+    self.gui.screenGui.ResetOnSpawn = false
+    self.gui.screenGui.Parent = self.player:WaitForChild("PlayerGui")
+    
+    -- Create main frame with gradient
+    self.gui.mainFrame = self:createMainFrame()
+    self.gui.titleFrame = self:createTitleFrame()
+    self.gui.buttonContainer = self:createButtonContainer()
+    
+    -- Create buttons
+    self:createActionButtons()
 end
 
-local function speedBoost()
-    local char = LocalPlayer.Character
-    if char then
-        local hum = char:FindFirstChildWhichIsA("Humanoid")
-        if hum then
-            hum.WalkSpeed = 40
-        end
-    end
-end
-
-local function teleportBase()
-    local basePosition = Vector3.new(0, 10, 0)
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        char.HumanoidRootPart.CFrame = CFrame.new(basePosition)
-    end
-end
-
-local function listarBrainrots()
-    local encontrados = {}
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if (obj:IsA("Tool") or obj:IsA("Model")) and string.find(obj.Name:lower(), "brainrot") then
-            table.insert(encontrados, obj)
-        end
-    end
-    return encontrados
-end
-
-local function roubarBrainrot(obj)
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    local handle = obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")
-    if handle and hrp then
-        firetouchinterest(hrp, handle, 0)
-        firetouchinterest(hrp, handle, 1)
-        wait(0.3)
-        teleportBase()
-        return true
-    end
-    return false
-end
-
-local function criarInterface()
-    local oldGui = game.CoreGui:FindFirstChild("BrainrotGUI")
-    if oldGui then oldGui:Destroy() end
-    local gui = Instance.new("ScreenGui", game.CoreGui)
-    gui.Name = "BrainrotGUI"
-    local frame = Instance.new("Frame", gui)
-    frame.Size = UDim2.new(0, 340, 0, 360)
-    frame.Position = UDim2.new(0, 20, 0, 80)
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+function StealBrainrot:createMainFrame()
+    local frame = Instance.new("Frame")
+    frame.Name = "MainFrame"
+    frame.Size = GUI_CONFIG.MAIN_SIZE
+    frame.Position = UDim2.new(0.5, -140, 0.5, -137.5)
+    frame.BackgroundColor3 = GUI_CONFIG.COLORS.BACKGROUND
     frame.BorderSizePixel = 0
-    frame.Active = true
-    frame.Draggable = true
-    local titulo = Instance.new("TextLabel", frame)
-    titulo.Size = UDim2.new(1, 0, 0, 28)
-    titulo.BackgroundTransparency = 1
-    titulo.Text = "Brainrot HUB + Localização"
-    titulo.TextColor3 = Color3.new(1, 1, 1)
-    titulo.Font = Enum.Font.SourceSansBold
-    titulo.TextSize = 18
+    frame.Parent = self.gui.screenGui
+    
+    -- Add corner and gradient
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+    
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 60)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 30))
+    }
+    gradient.Rotation = 45
+    gradient.Parent = frame
+    
+    return frame
+end
 
-    local y = 40
-    local function criarBotaoFuncoes(texto, y, func)
-        local btn = Instance.new("TextButton", frame)
-        btn.Size = UDim2.new(0, 200, 0, 26)
-        btn.Position = UDim2.new(0, 15, 0, y)
-        btn.Text = texto
-        btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        btn.TextColor3 = Color3.new(1,1,1)
-        btn.BorderSizePixel = 0
-        btn.Font = Enum.Font.SourceSans
-        btn.TextSize = 14
-        btn.MouseButton1Click:Connect(func)
-        return btn
-    end
-
-    criarBotaoFuncoes("Super Jump", y, superJump)
-    criarBotaoFuncoes("Speed Boost", y+30, speedBoost)
-    criarBotaoFuncoes("Tp para Base", y+60, teleportBase)
-    criarBotaoFuncoes("Salvar Localização", y+90, setCustomLocation)
-    criarBotaoFuncoes("Tp para Localização Salva", y+120, teleportCustom)
-
-    -- Botões de roubo de brainrot dinâmicos
-    local yBrain = y+160
-    local function atualizarBotaoRoubo()
-        for _, child in pairs(frame:GetChildren()) do
-            if child:IsA("TextButton") and child.Position.Y.Offset >= yBrain then child:Destroy() end
+function StealBrainrot:steal()
+    if not self.markPosition or self.isStealActive then return end
+    
+    self.isStealActive = true
+    self.gui.buttons.steal.Text = "🔥 STEALING..."
+    
+    local currentPos = self.rootPart.Position
+    local targetPos = self.markPosition
+    local distance = (targetPos - currentPos).Magnitude
+    local steps = math.ceil(distance / STEAL_CONFIG.STEP_SIZE)
+    local stepSize = (targetPos - currentPos) / steps
+    
+    -- Create a new thread for the stealing process
+    coroutine.wrap(function()
+        for i = 1, steps do
+            if not self.isStealActive then break end
+            
+            local nextPos = currentPos + (stepSize * i)
+            self.rootPart.CFrame = CFrame.new(nextPos)
+            task.wait(STEAL_CONFIG.STEP_DELAY)
         end
-        local lista = listarBrainrots()
-        for i, obj in ipairs(lista) do
-            criarBotaoFuncoes("Roubar '"..obj.Name.."'", yBrain + (i-1)*26, function()
-                local status = roubarBrainrot(obj)
-                if status then
-                    print("Roubo realizado em: "..obj.Name)
-                else
-                    warn("Falha ao roubar: "..obj.Name)
+        
+        if self.isStealActive then
+            task.wait(0.1)
+            self.rootPart.CFrame = CFrame.new(self.markPosition + Vector3.new(0, STEAL_CONFIG.VERTICAL_OFFSET, 0))
+        end
+        
+        self.gui.buttons.steal.Text = "🔥 STEAL"
+        self.isStealActive = false
+    end)()
+end
+
+function StealBrainrot:mark()
+    self.markPosition = self.rootPart.Position
+    
+    -- Remove existing mark if present
+    local existingMark = workspace:FindFirstChild("PlayerMark")
+    if existingMark then existingMark:Destroy() end
+    
+    -- Create new mark
+    local markPart = Instance.new("Part")
+    markPart.Name = "PlayerMark"
+    markPart.Size = Vector3.new(4, 1, 4)
+    markPart.Position = self.markPosition
+    markPart.Material = Enum.Material.Neon
+    markPart.BrickColor = BrickColor.new("Bright green")
+    markPart.CanCollide = false
+    markPart.Anchored = true
+    markPart.Shape = Enum.PartType.Cylinder
+    markPart.Parent = workspace
+    
+    -- Add pulsing effect
+    TweenService:Create(
+        markPart,
+        TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+        {Transparency = 0.5}
+    ):Play()
+end
+
+function StealBrainrot:serverHop()
+    self.gui.buttons.hop.Text = "🔄 HOPPING..."
+    
+    local function teleport()
+        local placeId = game.PlaceId
+        local servers = HttpService:JSONDecode(
+            game:HttpGet(string.format(
+                "https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100",
+                placeId
+            ))
+        )
+        
+        if servers and servers.data and #servers.data > 0 then
+            for _, server in ipairs(servers.data) do
+                if server.id ~= game.JobId and server.playing < server.maxPlayers then
+                    return TeleportService:TeleportToPlaceInstance(placeId, server.id, self.player)
                 end
-            end)
+            end
         end
+        
+        return TeleportService:Teleport(placeId, self.player)
     end
-    atualizarBotaoRoubo()
-    workspace.DescendantAdded:Connect(function(obj)
-        if string.find(obj.Name:lower(), "brainrot") then atualizarBotaoRoubo() end
-    end)
-    workspace.DescendantRemoving:Connect(function(obj)
-        if string.find(obj.Name:lower(), "brainrot") then atualizarBotaoRoubo() end
+    
+    local success = pcall(teleport)
+    if not success then
+        pcall(function()
+            TeleportService:Teleport(game.PlaceId, self.player)
+        end)
+    end
+    
+    -- Reset button text after delay
+    task.delay(5, function()
+        if self.gui.buttons.hop then
+            self.gui.buttons.hop.Text = "🔄 SERVER HOP"
+        end
     end)
 end
 
-criarInterface()
+function StealBrainrot:setupConnections()
+    -- Character respawn handling
+    self.player.CharacterAdded:Connect(function(newCharacter)
+        self.character = newCharacter
+        self.rootPart = newCharacter:WaitForChild("HumanoidRootPart")
+    end)
+    
+    -- GUI dragging functionality
+    local dragging, dragStart, startPos
+    
+    local function updateDrag(input)
+        if dragging then
+            local delta = input.Position - dragStart
+            self.gui.mainFrame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end
+    
+    self.gui.titleFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = self.gui.mainFrame.Position
+        end
+    end)
+    
+    self.gui.titleFrame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+    
+    self.gui.titleFrame.InputChanged:Connect(updateDrag)
+end
+
+-- Initialize the script
+local brainrot = StealBrainrot.new()
