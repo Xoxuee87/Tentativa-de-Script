@@ -1,12 +1,19 @@
 --[[
-Melhorias para o script "Steal A Brainrot"
-- Movimentação mais suave e segura (usa RenderStepped, sem wait dentro de Heartbeat)
-- Marca visual com limpeza adequada
-- Server hop com tratamento de erros
-- UI refinada: hover seguro, minimizar, arrastar melhor
-- Atalhos de teclado (M = marcar, G = STEAL, H = server hop)
-- Tratamento de respawn / ausência do personagem
-- Comentários em português para facilitar customizações
+Steel A Brainrot - Versão corrigida e mais segura
+O que foi feito:
+- Substituí o teleporte fixo de +200 studs por movimento com PathfindingService quando possível,
+  com fallback seguro usando raycast para encontrar o chão próximo à marca.
+- Evitei teleports que jogavam o jogador para fora do mapa.
+- goDown agora usa raycast para pousar no chão abaixo do jogador (fallback pequeno se não achar).
+- Tratamento robusto para ausência de Humanoid/HumanoidRootPart e respawn.
+- Timeouts, validações e limpeza correta da marca.
+- Mantive a UI e animações do script anterior.
+- Adicionei atalhos de teclado (M, G, H) e proteção contra múltiplas execuções simultâneas.
+
+Uso:
+- M: marcar posição
+- G: iniciar "steal" (tenta usar Pathfinding; se falhar, faz fallback seguro)
+- H: server hop
 ]]
 
 local Players = game:GetService("Players")
@@ -15,22 +22,24 @@ local UserInputService = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
+local PathfindingService = game:GetService("PathfindingService")
 
--- Guardas básicas (caso o script seja executado muito cedo)
+local LocalPlayer = Players.LocalPlayer
 if not LocalPlayer then
-    warn("Script precisa rodar como LocalScript dentro do Player.")
+    warn("Script deve rodar como LocalScript no cliente.")
     return
 end
 
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local rootPart = character:FindFirstChild("HumanoidRootPart")
+local humanoid = character:FindFirstChildOfClass("Humanoid")
 
 -- Reatribuir quando respawnar
 LocalPlayer.CharacterAdded:Connect(function(newChar)
     character = newChar
     rootPart = character:WaitForChild("HumanoidRootPart")
+    humanoid = character:WaitForChild("Humanoid")
 end)
 
 -- Estado
@@ -39,7 +48,6 @@ local isStealActive = false
 local isMinimized = false
 local markPart = nil
 
--- Util: clamp color ao criar hover
 local function brightenColor(color3, factor)
     local r = math.clamp(color3.R * factor, 0, 1)
     local g = math.clamp(color3.G * factor, 0, 1)
@@ -47,7 +55,7 @@ local function brightenColor(color3, factor)
     return Color3.new(r, g, b)
 end
 
--- Cria GUI
+-- UI (mantive parecido com a versão anterior)
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "StealBrainRotGui"
 screenGui.ResetOnSpawn = false
@@ -80,7 +88,7 @@ titleFrame.Size = UDim2.new(1, 0, 0, 40)
 titleFrame.Position = UDim2.new(0, 0, 0, 0)
 titleFrame.BackgroundTransparency = 1
 titleFrame.Parent = mainFrame
-titleFrame.Active = true -- para Input events
+titleFrame.Active = true
 
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "TitleLabel"
@@ -122,7 +130,6 @@ buttonContainer.Position = UDim2.new(0, 10, 0, 50)
 buttonContainer.BackgroundTransparency = 1
 buttonContainer.Parent = mainFrame
 
--- Helper para criar botões com hover seguro
 local function createButton(name, text, yOffset, color)
     local button = Instance.new("TextButton")
     button.Name = name
@@ -168,9 +175,7 @@ local goDownButton = createButton("GoDownButton", "⬇️ GO DOWN", 55, Color3.f
 local markButton = createButton("MarkButton", "📍 MARK (M)", 110, Color3.fromRGB(60, 255, 60))
 local serverHopButton = createButton("ServerHopButton", "🔄 SERVER HOP (H)", 165, Color3.fromRGB(255, 165, 0))
 
--- Função para criar/remover marca no workspace (visível para todos, nomeado por player)
 local function createMarkAt(position)
-    -- limpa marca anterior se existir (própria do player)
     if markPart and markPart.Parent then
         markPart:Destroy()
         markPart = nil
@@ -184,12 +189,10 @@ local function createMarkAt(position)
     part.Material = Enum.Material.Neon
     part.BrickColor = BrickColor.new("Bright green")
     part.Transparency = 0
-    -- Cylinder Y axis up (altura = Y). Rotar para ficar "plano" se quiser
-    part.CFrame = CFrame.new(position) * CFrame.Angles(math.rad(90), 0, 0) -- faz o cilindro ficar "deitado"
+    part.CFrame = CFrame.new(position) * CFrame.Angles(math.rad(90), 0, 0)
     part.Shape = Enum.PartType.Cylinder
     part.Parent = workspace
 
-    -- Pulsar (transparência alternada)
     local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
     local pulse = TweenService:Create(part, tweenInfo, {Transparency = 0.5})
     pulse:Play()
@@ -198,18 +201,124 @@ local function createMarkAt(position)
     markPosition = position
 end
 
+-- Retorna uma posição segura próxima ao alvo (procura chão por raycast)
+local function getSafePosition(position)
+    local upOrigin = position + Vector3.new(0, 60, 0)
+    local params = RaycastParams.new()
+    params.FilterDescendantsInstances = {character}
+    params.FilterType = Enum.RaycastFilterType.Blacklist
+    local ray = workspace:Raycast(upOrigin, Vector3.new(0, -300, 0), params)
+    if ray and ray.Position then
+        return ray.Position + Vector3.new(0, 3, 0)
+    end
+    -- fallback mais conservador
+    return position + Vector3.new(0, 3, 0)
+end
+
+-- Move usando PathfindingService. Retorna true se alcançou, false caso falhe/timeout.
+local function moveToWithPathfinding(destination, totalTimeout)
+    if not character or not rootPart then return false end
+    humanoid = humanoid or character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return false end
+
+    -- Não tentar pathfinding se distância for muito grande (opcional) ou se ambiente for inválido
+    local startPos = rootPart.Position
+    local distance = (destination - startPos).Magnitude
+    -- Se muito próximo, apenas MoveTo direto
+    if distance <= 4 then
+        humanoid:MoveTo(destination)
+        local ok = humanoid.MoveToFinished:Wait()
+        -- checar proximidade
+        return (rootPart.Position - destination).Magnitude <= 5
+    end
+
+    local path = PathfindingService:CreatePath({
+        AgentRadius = 2,
+        AgentHeight = 5,
+        AgentCanJump = true,
+        AgentJumpHeight = 6,
+        AgentMaxSlope = 45
+    })
+
+    local ok, err = pcall(function()
+        path:ComputeAsync(startPos, destination)
+    end)
+    if not ok then
+        warn("Path compute pcall failed:", err)
+        return false
+    end
+
+    if path.Status ~= Enum.PathStatus.Success then
+        -- pode ser NoPath ou nada
+        return false
+    end
+
+    local waypoints = path:GetWaypoints()
+    local startTime = tick()
+    for i, wp in ipairs(waypoints) do
+        if not humanoid or not humanoid.Parent then return false end
+        -- wp.Position é o local a ir
+        if wp.Action == Enum.PathWaypointAction.Jump then
+            humanoid.Jump = true
+        end
+
+        local requiredPos = wp.Position
+        humanoid:MoveTo(requiredPos)
+
+        -- esperar até chegar ou até timeout
+        local reached = false
+        local conn
+        local reachedSignal = Instance.new("BindableEvent")
+        conn = humanoid.MoveToFinished:Connect(function(reachedArg)
+            -- MoveToFinished historically não passa argumento consistentemente; então avaliamos pela distância também
+            local dist = (rootPart.Position - requiredPos).Magnitude
+            if dist <= 6 then
+                reachedSignal:Fire(true)
+            else
+                reachedSignal:Fire(reachedArg == true)
+            end
+        end)
+
+        -- aguardar, com timeout por waypoint
+        local waypointTimeout = 8 -- segundos por waypoint
+        local waited = 0
+        while waited < waypointTimeout do
+            local fired = reachedSignal.Event:Wait()
+            if fired then
+                reached = true
+                break
+            end
+            waited = waited + 0.1
+            task.wait(0.1)
+        end
+
+        conn:Disconnect()
+        reachedSignal:Destroy()
+
+        if not reached then
+            -- falhou em um waypoint
+            return false
+        end
+
+        if tick() - startTime > (totalTimeout or 25) then
+            return false
+        end
+    end
+
+    -- chegou em todos os waypoints
+    return true
+end
+
 -- Marcar posição atual
 local function mark()
-    if not rootPart then
+    if not rootPart or not rootPart.Parent then
         rootPart = character and character:FindFirstChild("HumanoidRootPart")
         if not rootPart then return end
     end
-
-    local pos = rootPart.Position
-    createMarkAt(pos)
+    createMarkAt(rootPart.Position)
 end
 
--- Movimento suave para marca
+-- Steal: tenta caminhar até a marca usando pathfinding, se falhar faz fallback seguro (teleport para posição do chão próximo)
 local function steal()
     if isStealActive then return end
     if not markPosition then
@@ -217,7 +326,6 @@ local function steal()
         task.delay(1.2, function() if stealButton then stealButton.Text = "🔥 STEAL" end end)
         return
     end
-
     if not rootPart or not rootPart.Parent then
         stealButton.Text = "❗ NO ROOT"
         task.delay(1.2, function() if stealButton then stealButton.Text = "🔥 STEAL" end end)
@@ -227,79 +335,95 @@ local function steal()
     isStealActive = true
     stealButton.Text = "🔥 STEALING..."
 
-    local moveSpeed = 80 -- studs por segundo (ajustável)
-    local finished = false
-    local disconnected = false
-
-    -- Conexão para mover cada frame
-    local conn
-    conn = RunService.RenderStepped:Connect(function(dt)
-        if not rootPart or not rootPart.Parent then
-            disconnected = true
-            return
-        end
-
-        local currentPos = rootPart.Position
-        local targetPos = markPosition
-        local direction = (targetPos - currentPos)
-        local distance = direction.Magnitude
-
-        if distance <= 3 then
-            finished = true
-            return
-        end
-
-        local moveStep = math.min(moveSpeed * dt, distance)
-        local newPos = currentPos + direction.Unit * moveStep
-
-        -- Preserva rotação aproximada (face para direção)
-        if direction.Magnitude > 0.1 then
-            local lookCFrame = CFrame.new(newPos, newPos + Vector3.new(direction.X, 0, direction.Z))
-            rootPart.CFrame = lookCFrame
-        else
-            rootPart.CFrame = CFrame.new(newPos)
-        end
+    -- Primeiro: tentar pathfinding com timeout total razoável
+    local pathSucceeded = false
+    local ok, err = pcall(function()
+        pathSucceeded = moveToWithPathfinding(markPosition, 30) -- 30s timeout total
     end)
 
-    -- Espera até terminar ou erro
-    local timeout = 12 -- segundos max
-    local timer = 0
-    while not finished and not disconnected and timer < timeout do
-        timer = timer + RunService.RenderStepped:Wait()
+    if not ok then
+        warn("Erro durante pathfinding:", err)
+        pathSucceeded = false
     end
 
-    if conn and conn.Connected then
-        conn:Disconnect()
-    end
-
-    -- Ao finalizar, sobe para evitar prender no chão (comportamento do script original)
-    if not disconnected then
+    if pathSucceeded then
+        -- ao chegar ao destino pelo pathfinding, garantir que está sobre um chão seguro
+        local safe = getSafePosition(markPosition)
         if rootPart and rootPart.Parent then
-            rootPart.CFrame = CFrame.new(markPosition + Vector3.new(0, 200, 0))
+            -- use MoveTo para posicionar bem em cima do safePos (evita teleports bruscos)
+            if humanoid and humanoid.Parent then
+                humanoid:MoveTo(safe)
+                local reached = humanoid.MoveToFinished:Wait()
+                -- Se não alcançou via MoveTo, apenas forçar CFrame com cuidado
+                if (rootPart.Position - safe).Magnitude > 6 then
+                    rootPart.CFrame = CFrame.new(safe)
+                end
+            else
+                rootPart.CFrame = CFrame.new(safe)
+            end
         end
-        stealButton.Text = "🔥 STEAL"
     else
-        stealButton.Text = "❗ FAILED"
-        task.delay(1.2, function() if stealButton then stealButton.Text = "🔥 STEAL" end end)
+        -- fallback: lugar seguro calculado via raycast, teleporta-se de forma conservadora (pequeno offset)
+        local safePos = getSafePosition(markPosition)
+        if rootPart and rootPart.Parent then
+            -- posicionar suavemente (primeiro desligar humanoid state)
+            if humanoid and humanoid.Parent then
+                -- garantir estado para evitar conflito
+                humanoid.Sit = true
+                task.wait(0.05)
+                rootPart.CFrame = CFrame.new(safePos)
+                humanoid.Sit = false
+            else
+                rootPart.CFrame = CFrame.new(safePos)
+            end
+        end
     end
 
     isStealActive = false
+    stealButton.Text = "🔥 STEAL"
 end
 
--- Descer (utilitário)
+-- Descer até o chão abaixo do player (usa raycast)
 local function goDown()
     if not rootPart or not rootPart.Parent then return end
-    rootPart.CFrame = rootPart.CFrame - Vector3.new(0, 200, 0)
+    local origin = rootPart.Position + Vector3.new(0, 2, 0)
+    local params = RaycastParams.new()
+    params.FilterDescendantsInstances = {character}
+    params.FilterType = Enum.RaycastFilterType.Blacklist
+    local result = workspace:Raycast(origin, Vector3.new(0, -600, 0), params)
+    if result and result.Position then
+        -- slight offset above ground
+        local target = result.Position + Vector3.new(0, 3, 0)
+        if humanoid and humanoid.Parent then
+            humanoid:MoveTo(target)
+            local ok = humanoid.MoveToFinished:Wait()
+            if (rootPart.Position - target).Magnitude > 6 then
+                rootPart.CFrame = CFrame.new(target)
+            end
+        else
+            rootPart.CFrame = CFrame.new(target)
+        end
+    else
+        -- fallback conservador
+        if humanoid and humanoid.Parent then
+            humanoid:MoveTo(rootPart.Position - Vector3.new(0, 30, 0))
+            local ok = humanoid.MoveToFinished:Wait()
+            if (rootPart.Position - (rootPart.Position - Vector3.new(0, 30, 0))).Magnitude > 6 then
+                rootPart.CFrame = rootPart.CFrame - Vector3.new(0, 30, 0)
+            end
+        else
+            rootPart.CFrame = rootPart.CFrame - Vector3.new(0, 30, 0)
+        end
+    end
 end
 
--- Server hop (busca servers públicos e tenta teleportar)
+-- Server hop (sem alteração significativa)
 local function serverHop()
     serverHopButton.Text = "🔄 HOPPING..."
     serverHopButton.AutoButtonColor = false
 
     local placeId = game.PlaceId
     local success, servers = pcall(function()
-        -- Tenta obter lista de servidores; pode falhar dependendo das permissões
         local url = ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100"):format(placeId)
         local raw = game:HttpGet(url)
         return HttpService:JSONDecode(raw)
@@ -309,7 +433,6 @@ local function serverHop()
         local hopped = false
         for _, s in ipairs(servers.data) do
             if s.id and s.id ~= game.JobId and (not s.maxPlayers or (s.playing < s.maxPlayers)) then
-                -- Tenta teleportar para a instância encontrada
                 local ok, err = pcall(function()
                     TeleportService:TeleportToPlaceInstance(placeId, s.id, LocalPlayer)
                 end)
@@ -317,20 +440,17 @@ local function serverHop()
                     hopped = true
                     break
                 else
-                    -- continua procurando
                     warn("Teleport falhou:", err)
                 end
             end
         end
 
         if not hopped then
-            -- fallback: teleport normal para o lugar (pode levar ao mesmo servidor)
             pcall(function()
                 TeleportService:Teleport(placeId, LocalPlayer)
             end)
         end
     else
-        -- fallback simples caso não consiga obter servidores
         pcall(function()
             TeleportService:Teleport(placeId, LocalPlayer)
         end)
@@ -344,7 +464,7 @@ local function serverHop()
     end)
 end
 
--- Minimize toggle
+-- Toggle minimize
 local function toggleMinimize()
     if isMinimized then
         local expandTween = TweenService:Create(mainFrame, TweenInfo.new(0.28, Enum.EasingStyle.Quad), {
@@ -365,14 +485,14 @@ local function toggleMinimize()
     end
 end
 
--- Conexões dos botões
+-- Conexões UI
 stealButton.MouseButton1Click:Connect(steal)
 goDownButton.MouseButton1Click:Connect(goDown)
 markButton.MouseButton1Click:Connect(mark)
 serverHopButton.MouseButton1Click:Connect(serverHop)
 minimizeButton.MouseButton1Click:Connect(toggleMinimize)
 
--- Arrastar a janela
+-- Dragging window
 local dragging = false
 local dragStart = Vector2.new(0, 0)
 local startPos = UDim2.new(0, 0, 0, 0)
@@ -399,18 +519,17 @@ titleFrame.InputChanged:Connect(function(input)
     end
 end)
 
--- Animação de aparecimento
+-- Aparecer animado
 mainFrame.Size = UDim2.new(0, 0, 0, 0)
 local appearTween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), {
     Size = UDim2.new(0, 280, 0, 275)
 })
 appearTween:Play()
 
--- Atalhos de teclado (M = mark, G = steal, H = server hop)
+-- Atalhos teclado
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
-
     local key = input.KeyCode
     if key == Enum.KeyCode.M then
         mark()
@@ -421,14 +540,24 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- Clean up mark ao sair do jogo localmente
+-- Limpeza da marca ao sair
 LocalPlayer.AncestryChanged:Connect(function()
     if not LocalPlayer:IsDescendantOf(game) and markPart and markPart.Parent then
         markPart:Destroy()
     end
 end)
 
--- Exposição opcional: permita outras partes do jogo chamarem as funções (se desejado)
+-- Ganchos finais para garantir referências atualizadas
+RunService.Heartbeat:Connect(function()
+    if character and (not humanoid or not humanoid.Parent) then
+        humanoid = character:FindFirstChildOfClass("Humanoid")
+    end
+    if character and (not rootPart or not rootPart.Parent) then
+        rootPart = character:FindFirstChild("HumanoidRootPart")
+    end
+end)
+
+-- Exposição opcional (descomente se desejar chamar por outros scripts)
 -- _G.StealA = {Mark = mark, Steal = steal, ServerHop = serverHop, GoDown = goDown}
 
--- Fim do script.
+-- Fim do script
