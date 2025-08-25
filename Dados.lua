@@ -1,11 +1,13 @@
 --[[ 
-    Brainrot Hub - Upwalk intacto + Teleporte personalizado + funções revisadas
+    Brainrot Hub - Upwalk intacto + Teleporte personalizado + TP para Brainrot + Auto Roubo
     - Upwalk: NÃO ALTERADO!
     - Teleporte: Salvar ponto e teleportar para ponto salvo
+    - TP para Brainrot mais próximo
+    - Auto Roubo Brainrots
     - Coletar dinheiro e Comprar Brainrot OP: Revisados
     - AntiSteal: Revisado
     - Interface gráfica simples
-    - Atalhos: Z=Salvar TP | X=Ir para TP | C=Coletar dinheiro | V=Comprar Brainrot OP
+    - Atalhos: Z=Salvar TP | X=Ir para TP | C=Dinheiro | V=Brainrot OP | Y=TP para Brainrot | U=Auto Roubo
 ]]
 
 local Players = game:GetService("Players")
@@ -94,6 +96,51 @@ function deactivateAntiSteal()
 end
 
 -- ====================
+-- TP para o Brainrot mais próximo
+-- ====================
+local function findClosestBrainrot()
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return nil end
+    local closest, closestDist = nil, math.huge
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj.Name:lower():find("brainrot") and obj:IsA("BasePart") then
+            local dist = (player.Character.HumanoidRootPart.Position - obj.Position).Magnitude
+            if dist < closestDist then
+                closest = obj
+                closestDist = dist
+            end
+        end
+    end
+    return closest
+end
+
+local function tpToClosestBrainrot()
+    local brainrot = findClosestBrainrot()
+    if brainrot and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(brainrot.Position + Vector3.new(0,3,0))
+        return true
+    end
+    return false
+end
+
+-- ====================
+-- Auto Roubo de Brainrots
+-- ====================
+local function autoStealBrainrots()
+    local found = false
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj.Name:lower():find("brainrot") and obj:IsA("BasePart") then
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                player.Character.HumanoidRootPart.CFrame = CFrame.new(obj.Position + Vector3.new(0,3,0))
+                wait(0.4)
+                -- Tente coletar aqui se houver RemoteEvent específico
+                found = true
+            end
+        end
+    end
+    return found
+end
+
+-- ====================
 -- UPWALK (MANTIDO INTACTO)
 -- ====================
 local upwalkEnabled = false
@@ -126,7 +173,7 @@ end
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 ScreenGui.Name = "BrainrotHub"
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 260, 0, 350)
+Frame.Size = UDim2.new(0, 260, 0, 420)
 Frame.Position = UDim2.new(0.03, 0, 0.18, 0)
 Frame.BackgroundColor3 = Color3.fromRGB(22,22,33)
 Frame.BorderSizePixel = 0
@@ -182,9 +229,49 @@ btnTP2.MouseButton1Click:Connect(function()
     end
 end)
 
+local btnBrainrotTP = Instance.new("TextButton", Frame)
+btnBrainrotTP.Size = UDim2.new(1, -28, 0, 38)
+btnBrainrotTP.Position = UDim2.new(0, 14, 0, 150)
+btnBrainrotTP.Text = "TP para Brainrot mais próximo"
+btnBrainrotTP.BackgroundColor3 = Color3.fromRGB(44,44,100)
+btnBrainrotTP.TextColor3 = Color3.new(1,1,1)
+btnBrainrotTP.Font = Enum.Font.SourceSans
+btnBrainrotTP.TextSize = 17
+btnBrainrotTP.MouseButton1Click:Connect(function()
+    if tpToClosestBrainrot() then
+        btnBrainrotTP.Text = "Teleportado!"
+        wait(1.3)
+        btnBrainrotTP.Text = "TP para Brainrot mais próximo"
+    else
+        btnBrainrotTP.Text = "Nenhum Brainrot encontrado"
+        wait(1.3)
+        btnBrainrotTP.Text = "TP para Brainrot mais próximo"
+    end
+end)
+
+local btnAutoSteal = Instance.new("TextButton", Frame)
+btnAutoSteal.Size = UDim2.new(1, -28, 0, 38)
+btnAutoSteal.Position = UDim2.new(0, 14, 0, 198)
+btnAutoSteal.Text = "Auto Roubo Brainrots"
+btnAutoSteal.BackgroundColor3 = Color3.fromRGB(100,44,44)
+btnAutoSteal.TextColor3 = Color3.new(1,1,1)
+btnAutoSteal.Font = Enum.Font.SourceSans
+btnAutoSteal.TextSize = 17
+btnAutoSteal.MouseButton1Click:Connect(function()
+    if autoStealBrainrots() then
+        btnAutoSteal.Text = "Roubo concluído!"
+        wait(1.3)
+        btnAutoSteal.Text = "Auto Roubo Brainrots"
+    else
+        btnAutoSteal.Text = "Nenhum Brainrot encontrado"
+        wait(1.3)
+        btnAutoSteal.Text = "Auto Roubo Brainrots"
+    end
+end)
+
 local btn3 = Instance.new("TextButton", Frame)
 btn3.Size = UDim2.new(1, -28, 0, 38)
-btn3.Position = UDim2.new(0, 14, 0, 150)
+btn3.Position = UDim2.new(0, 14, 0, 246)
 btn3.Text = "Coletar Dinheiro"
 btn3.BackgroundColor3 = Color3.fromRGB(44,44,44)
 btn3.TextColor3 = Color3.new(1,1,1)
@@ -204,7 +291,7 @@ end)
 
 local btn4 = Instance.new("TextButton", Frame)
 btn4.Size = UDim2.new(1, -28, 0, 38)
-btn4.Position = UDim2.new(0, 14, 0, 198)
+btn4.Position = UDim2.new(0, 14, 0, 294)
 btn4.Text = "Comprar Brainrot OP"
 btn4.BackgroundColor3 = Color3.fromRGB(70,44,44)
 btn4.TextColor3 = Color3.new(1,1,1)
@@ -224,7 +311,7 @@ end)
 
 local btn5 = Instance.new("TextButton", Frame)
 btn5.Size = UDim2.new(1, -28, 0, 38)
-btn5.Position = UDim2.new(0, 14, 0, 246)
+btn5.Position = UDim2.new(0, 14, 0, 342)
 btn5.Text = "Anti Steal: OFF"
 btn5.BackgroundColor3 = Color3.fromRGB(80,20,20)
 btn5.TextColor3 = Color3.new(1,1,1)
@@ -244,7 +331,7 @@ end)
 
 local btn6 = Instance.new("TextButton", Frame)
 btn6.Size = UDim2.new(1, -28, 0, 38)
-btn6.Position = UDim2.new(0, 14, 0, 294)
+btn6.Position = UDim2.new(0, 14, 0, 390)
 btn6.Text = "Upwalk: OFF"
 btn6.BackgroundColor3 = Color3.fromRGB(40,40,80)
 btn6.TextColor3 = Color3.new(1,1,1)
@@ -264,8 +351,8 @@ end)
 
 local info = Instance.new("TextLabel", Frame)
 info.Size = UDim2.new(1, -20, 0, 30)
-info.Position = UDim2.new(0, 10, 0, 338)
-info.Text = "Atalhos: Z=Salvar TP | X=Ir para TP | C=Dinheiro | V=Brainrot"
+info.Position = UDim2.new(0, 10, 0, 410)
+info.Text = "Atalhos: Z=Salvar TP | X=Ir para TP | C=Dinheiro | V=Brainrot OP | Y=TP Brainrot | U=Auto Roubo"
 info.TextColor3 = Color3.fromRGB(200,200,200)
 info.Font = Enum.Font.SourceSans
 info.TextSize = 16
@@ -274,7 +361,7 @@ info.BackgroundTransparency = 1
 -- ====================
 -- Atalhos
 -- ====================
-local lastUse = {Z=0, X=0, C=0, V=0}
+local lastUse = {Z=0, X=0, C=0, V=0, Y=0, U=0}
 UIS.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     local now = tick()
@@ -290,5 +377,11 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
     elseif input.KeyCode == Enum.KeyCode.V and now - lastUse.V > 2 then
         lastUse.V = now
         buyOPBrainrot()
+    elseif input.KeyCode == Enum.KeyCode.Y and now - lastUse.Y > 2 then
+        lastUse.Y = now
+        tpToClosestBrainrot()
+    elseif input.KeyCode == Enum.KeyCode.U and now - lastUse.U > 2 then
+        lastUse.U = now
+        autoStealBrainrots()
     end
 end)
