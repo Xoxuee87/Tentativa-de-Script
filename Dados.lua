@@ -1,7 +1,7 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Localização customizada
+-- Variável para guardar localização customizada
 local customPosition = nil
 
 local function setCustomLocation()
@@ -22,7 +22,6 @@ local function teleportCustom()
     end
 end
 
--- Funções extras (exemplo, adapte conforme seu código)
 local function superJump()
     local char = LocalPlayer.Character
     if char then
@@ -52,14 +51,37 @@ local function teleportBase()
     end
 end
 
--- Painel HUB
+local function listarBrainrots()
+    local encontrados = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if (obj:IsA("Tool") or obj:IsA("Model")) and string.find(obj.Name:lower(), "brainrot") then
+            table.insert(encontrados, obj)
+        end
+    end
+    return encontrados
+end
+
+local function roubarBrainrot(obj)
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local handle = obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")
+    if handle and hrp then
+        firetouchinterest(hrp, handle, 0)
+        firetouchinterest(hrp, handle, 1)
+        wait(0.3)
+        teleportBase()
+        return true
+    end
+    return false
+end
+
 local function criarInterface()
     local oldGui = game.CoreGui:FindFirstChild("BrainrotGUI")
     if oldGui then oldGui:Destroy() end
     local gui = Instance.new("ScreenGui", game.CoreGui)
     gui.Name = "BrainrotGUI"
     local frame = Instance.new("Frame", gui)
-    frame.Size = UDim2.new(0, 340, 0, 335)
+    frame.Size = UDim2.new(0, 340, 0, 360)
     frame.Position = UDim2.new(0, 20, 0, 80)
     frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     frame.BorderSizePixel = 0
@@ -94,30 +116,7 @@ local function criarInterface()
     criarBotaoFuncoes("Salvar Localização", y+90, setCustomLocation)
     criarBotaoFuncoes("Tp para Localização Salva", y+120, teleportCustom)
 
-    -- Exemplo: botões de brainrot (adicione sua função roubar aqui)
-    local function listarBrainrots()
-        local encontrados = {}
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if (obj:IsA("Tool") or obj:IsA("Model")) and string.find(obj.Name:lower(), "brainrot") then
-                table.insert(encontrados, obj)
-            end
-        end
-        return encontrados
-    end
-    local function roubarBrainrot(obj)
-        local char = LocalPlayer.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        local handle = obj:FindFirstChild("Handle") or obj:FindFirstChildWhichIsA("BasePart")
-        if handle and hrp then
-            firetouchinterest(hrp, handle, 0)
-            firetouchinterest(hrp, handle, 1)
-            wait(0.3)
-            teleportBase()
-            return true
-        end
-        return false
-    end
-
+    -- Botões de roubo de brainrot dinâmicos
     local yBrain = y+160
     local function atualizarBotaoRoubo()
         for _, child in pairs(frame:GetChildren()) do
