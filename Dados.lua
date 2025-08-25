@@ -1,5 +1,3 @@
--- Cria um painel na tela mostrando dinamicamente os nomes dos itens encontrados e a distância até o jogador
-
 -- Configurações de estilo
 local FRAME_SIZE = UDim2.new(0, 300, 0, 400)
 local FRAME_POS = UDim2.new(0, 20, 0, 60)
@@ -14,10 +12,15 @@ local Workspace = game:GetService("Workspace")
 -- Pasta dos itens (se existir)
 local pastaItens = Workspace:FindFirstChild("Items") or Workspace
 
+-- Função para garantir PlayerGui
+local function getPlayerGui()
+    return LocalPlayer:FindFirstChild("PlayerGui") or LocalPlayer.PlayerGui
+end
+
 -- Criação da GUI principal
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ItensPainel"
-screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+screenGui.Parent = getPlayerGui()
 
 local frame = Instance.new("Frame")
 frame.Size = FRAME_SIZE
@@ -39,7 +42,7 @@ titulo.Parent = frame
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1, -10, 1, -50)
 scrollFrame.Position = UDim2.new(0, 5, 0, 45)
-scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- ajustado dinamicamente
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 scrollFrame.ScrollBarThickness = 6
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.Parent = frame
@@ -58,47 +61,64 @@ local function getDistancia(itemPos, playerChar)
     return nil
 end
 
--- Função para atualizar a lista de itens
-local function atualizarPainel()
-    scrollFrame:ClearAllChildren()
-    layout.Parent = scrollFrame -- recoloca o layout (ele some ao limpar)
+-- Função para encontrar posição do item (BasePart ou Model c/ PrimaryPart)
+local function getItemPosition(item)
+    if item:IsA("BasePart") then
+        return item.Position
+    elseif item:IsA("Model") and item.PrimaryPart then
+        return item.PrimaryPart.Position
+    end
+    return nil
+end
 
-    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+-- Armazena labels para atualização rápida
+local itemLabels = {}
+
+-- Atualiza a listagem (cria labels)
+local function criarPainel()
+    itemLabels = {}
+    scrollFrame:ClearAllChildren()
+    layout.Parent = scrollFrame
 
     for _, item in ipairs(pastaItens:GetChildren()) do
-        if item:IsA("BasePart") or item:IsA("Model") then
-            local pos
-            if item:IsA("BasePart") then
-                pos = item.Position
-            elseif item:IsA("Model") and item.PrimaryPart then
-                pos = item.PrimaryPart.Position
-            end
+        local pos = getItemPosition(item)
+        if pos then
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, -5, 0, 20)
+            label.BackgroundTransparency = 1
+            label.TextColor3 = TEXT_COLOR
+            label.Font = Enum.Font.SourceSans
+            label.TextSize = 18
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = scrollFrame
 
-            if pos then
-                local distancia = getDistancia(pos, character)
-                local label = Instance.new("TextLabel")
-                label.Size = UDim2.new(1, -5, 0, 20)
-                label.BackgroundTransparency = 1
-                label.Text = item.Name .. (distancia and (" (" .. distancia .. " studs)") or "")
-                label.TextColor3 = TEXT_COLOR
-                label.Font = Enum.Font.SourceSans
-                label.TextSize = 18
-                label.TextXAlignment = Enum.TextXAlignment.Left
-                label.Parent = scrollFrame
-            end
+            itemLabels[item] = label
         end
     end
 
-    -- Ajusta tamanho do scroll
     scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
 end
 
--- Atualiza sempre que mudar a lista de itens
-pastaItens.ChildAdded:Connect(atualizarPainel)
-pastaItens.ChildRemoved:Connect(atualizarPainel)
+-- Atualiza apenas distâncias e nomes
+local function atualizarDistancias()
+    local character = LocalPlayer.Character
+    for item, label in pairs(itemLabels) do
+        local pos = getItemPosition(item)
+        if pos then
+            local distancia = getDistancia(pos, character)
+            label.Text = item.Name .. (distancia and (" (" .. distancia .. " studs)") or "")
+        else
+            label.Text = item.Name
+        end
+    end
+end
 
--- Atualiza constantemente as distâncias
-game:GetService("RunService").RenderStepped:Connect(atualizarPainel)
+-- Atualiza lista quando itens mudam
+pastaItens.ChildAdded:Connect(criarPainel)
+pastaItens.ChildRemoved:Connect(criarPainel)
 
--- Primeira atualização
-atualizarPainel()
+-- Atualiza distâncias em tempo real
+game:GetService("RunService").RenderStepped:Connect(atualizarDistancias)
+
+-- Primeira criação do painel
+criarPainel()
