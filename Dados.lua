@@ -156,7 +156,23 @@ local TeleportSystem = {
         if not savedTeleportPosition then return false end
         local rootPart = getHumanoidRootPart()
         if rootPart then
-            rootPart.CFrame = CFrame.new(savedTeleportPosition)
+            -- Teleporte com verificação contínua para evitar retorno
+            local targetPos = savedTeleportPosition + Vector3.new(0, 3, 0)
+            
+            -- Primeiro teleporte
+            rootPart.CFrame = CFrame.new(targetPos)
+            
+            -- Verificar se foi teleportado de volta e forçar novamente
+            task.spawn(function()
+                for i = 1, 10 do
+                    task.wait(0.1)
+                    if rootPart.Position:Distance(savedTeleportPosition) > 10 then
+                        -- Se foi teleportado longe, tentar novamente
+                        rootPart.CFrame = CFrame.new(targetPos)
+                    end
+                end
+            end)
+            
             return true
         end
         return false
@@ -172,10 +188,23 @@ local MoneySystem = {
         Returns: boolean (success)
     ]]
     collect = function()
-        local remote = validateRemote("CollectMoney")
-        if remote then
-            remote:FireServer(math.random(100, 1000))
-            return true
+        -- Tentar diferentes nomes de remotes para coleta de dinheiro
+        local remoteNames = {"CollectMoney", "Collect", "Money", "Cash", "Pickup", "Grab"}
+        for _, remoteName in pairs(remoteNames) do
+            local remote = validateRemote(remoteName)
+            if remote then
+                -- Tentar diferentes formatos de dados
+                local success, result = pcall(function()
+                    remote:FireServer(math.random(100, 1000))
+                    remote:FireServer("money")
+                    remote:FireServer()
+                    return true
+                end)
+                if success then
+                    warn("Tentativa de coleta de dinheiro via: " .. remoteName)
+                    return true
+                end
+            end
         end
         return false
     end
@@ -190,10 +219,23 @@ local BrainrotSystem = {
         Returns: boolean (success)
     ]]
     buyOP = function()
-        local remote = validateRemote("BuyBrainrot")
-        if remote then
-            remote:FireServer("GodOP_" .. tostring(math.random(1000, 9999)))
-            return true
+        -- Tentar diferentes nomes de remotes comuns para compra
+        local remoteNames = {"BuyBrainrot", "BuyItem", "Purchase", "Buy", "Shop"}
+        for _, remoteName in pairs(remoteNames) do
+            local remote = validateRemote(remoteName)
+            if remote then
+                -- Tentar diferentes formatos de dados
+                local success, result = pcall(function()
+                    remote:FireServer("GodOP_" .. tostring(math.random(1000, 9999)))
+                    remote:FireServer("OP")
+                    remote:FireServer("Brainrot")
+                    return true
+                end)
+                if success then
+                    warn("Tentativa de compra enviada via: " .. remoteName)
+                    return true
+                end
+            end
         end
         return false
     end,
@@ -212,10 +254,14 @@ local BrainrotSystem = {
         local currentTime = tick()
         if currentTime - lastBrainrotCacheUpdate > BRAINROT_CACHE_TIMEOUT then
             brainrotCache = {}
-            -- Corrigido: Buscar corretamente por BaseParts
+            -- Buscar por diferentes tipos de objetos que podem ser Brainrots
             for _, obj in pairs(Workspace:GetDescendants()) do
-                if obj:IsA("BasePart") and obj.Name:lower():find("brainrot") then
-                    table.insert(brainrotCache, obj)
+                if obj:IsA("BasePart") or obj:IsA("Model") then
+                    local name = obj.Name:lower()
+                    if name:find("brainrot") or name:find("brain") or name:find("rot") or 
+                       name:find("item") or name:find("collect") or name:find("pick") then
+                        table.insert(brainrotCache, obj)
+                    end
                 end
             end
             lastBrainrotCacheUpdate = currentTime
@@ -227,7 +273,11 @@ local BrainrotSystem = {
         -- Use cached brainrots
         for _, obj in pairs(brainrotCache) do
             if obj and obj.Parent then -- Check if object still exists
-                local distance = (rootPart.Position - obj.Position).Magnitude
+                local position = obj.Position
+                if obj:IsA("Model") and obj.PrimaryPart then
+                    position = obj.PrimaryPart.Position
+                end
+                local distance = (rootPart.Position - position).Magnitude
                 if distance < closestDistance then
                     closest = obj
                     closestDistance = distance
@@ -249,7 +299,22 @@ local BrainrotSystem = {
         
         local rootPart = getHumanoidRootPart()
         if rootPart then
-            rootPart.CFrame = CFrame.new(brainrot.Position + Vector3.new(0, 3, 0))
+            local position = brainrot.Position
+            if brainrot:IsA("Model") and brainrot.PrimaryPart then
+                position = brainrot.PrimaryPart.Position
+            end
+            
+            -- Teleporte com offset para não ficar dentro do objeto
+            local targetPos = position + Vector3.new(0, 5, 0)
+            
+            -- Tentar teleporte suave
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid:MoveTo(targetPos)
+            end
+            
+            -- Teleporte direto como backup
+            rootPart.CFrame = CFrame.new(targetPos)
             return true
         end
         return false
@@ -268,10 +333,14 @@ local BrainrotSystem = {
         local currentTime = tick()
         if currentTime - lastBrainrotCacheUpdate > BRAINROT_CACHE_TIMEOUT then
             brainrotCache = {}
-            -- Corrigido: Buscar corretamente por BaseParts
+            -- Buscar por diferentes tipos de objetos que podem ser Brainrots
             for _, obj in pairs(Workspace:GetDescendants()) do
-                if obj:IsA("BasePart") and obj.Name:lower():find("brainrot") then
-                    table.insert(brainrotCache, obj)
+                if obj:IsA("BasePart") or obj:IsA("Model") then
+                    local name = obj.Name:lower()
+                    if name:find("brainrot") or name:find("brain") or name:find("rot") or 
+                       name:find("item") or name:find("collect") or name:find("pick") then
+                        table.insert(brainrotCache, obj)
+                    end
                 end
             end
             lastBrainrotCacheUpdate = currentTime
@@ -282,9 +351,29 @@ local BrainrotSystem = {
         -- Use cached brainrots
         for _, obj in pairs(brainrotCache) do
             if obj and obj.Parent then -- Check if object still exists
-                rootPart.CFrame = CFrame.new(obj.Position + Vector3.new(0, 3, 0))
-                task.wait(0.4)
-                -- If there's a collection remote, add it here
+                local position = obj.Position
+                if obj:IsA("Model") and obj.PrimaryPart then
+                    position = obj.PrimaryPart.Position
+                end
+                
+                -- Teleporte para o objeto
+                local targetPos = position + Vector3.new(0, 5, 0)
+                rootPart.CFrame = CFrame.new(targetPos)
+                
+                -- Tentar diferentes remotes de coleta
+                local collectRemotes = {"Collect", "Pickup", "Grab", "Take", "Steal"}
+                for _, remoteName in pairs(collectRemotes) do
+                    local remote = validateRemote(remoteName)
+                    if remote then
+                        pcall(function()
+                            remote:FireServer()
+                            remote:FireServer(obj)
+                            remote:FireServer(obj.Name)
+                        end)
+                    end
+                end
+                
+                task.wait(0.5) -- Esperar um pouco entre cada objeto
                 found = true
             end
         end
@@ -704,8 +793,54 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
+-- Debug System
+-- Helps identify available remotes and game structure
+local DebugSystem = {
+    --[[
+        listAllRemotes()
+        Lists all available remotes in ReplicatedStorage for debugging
+    ]]
+    listAllRemotes = function()
+        warn("=== DEBUG: Listando todos os remotes disponíveis ===")
+        for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
+            if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+                warn("Remote encontrado: " .. obj.Name .. " (Tipo: " .. obj.ClassName .. ")")
+            end
+        end
+        warn("=== FIM DA LISTA ===")
+    end,
+    
+    --[[
+        findBrainrotObjects()
+        Lists all objects that might be Brainrots for debugging
+    ]]
+    findBrainrotObjects = function()
+        warn("=== DEBUG: Procurando por objetos Brainrot ===")
+        local count = 0
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") or obj:IsA("Model") then
+                local name = obj.Name:lower()
+                if name:find("brainrot") or name:find("brain") or name:find("rot") or 
+                   name:find("item") or name:find("collect") or name:find("pick") then
+                    warn("Objeto potencial encontrado: " .. obj.Name .. " (Tipo: " .. obj.ClassName .. ")")
+                    count = count + 1
+                end
+            end
+        end
+        warn("Total de objetos encontrados: " .. count)
+        warn("=== FIM DA BUSCA ===")
+    end
+}
+
 -- Initialize
 --[[
     Creates the user interface when the script runs
 ]]
 UISystem.create()
+
+-- Debug: Listar remotes disponíveis após um delay
+task.spawn(function()
+    task.wait(3) -- Esperar 3 segundos para o jogo carregar
+    DebugSystem.listAllRemotes()
+    DebugSystem.findBrainrotObjects()
+end)
