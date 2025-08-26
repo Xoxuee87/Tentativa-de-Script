@@ -79,7 +79,7 @@ local REMOTE_CALL_COOLDOWN = 1 -- seconds
 ]]
 local function waitForCharacter()
     if player.Character then return end
-    repeat wait() until player.Character
+    repeat task.wait() until player.Character
 end
 
 --[[
@@ -212,8 +212,8 @@ local BrainrotSystem = {
         local currentTime = tick()
         if currentTime - lastBrainrotCacheUpdate > BRAINROT_CACHE_TIMEOUT then
             brainrotCache = {}
-            local baseParts = Workspace:FindFirstChildOfClass("BasePart") and Workspace:GetChildren() or Workspace:GetDescendants()
-            for _, obj in pairs(baseParts) do
+            -- Corrigido: Buscar corretamente por BaseParts
+            for _, obj in pairs(Workspace:GetDescendants()) do
                 if obj:IsA("BasePart") and obj.Name:lower():find("brainrot") then
                     table.insert(brainrotCache, obj)
                 end
@@ -268,8 +268,8 @@ local BrainrotSystem = {
         local currentTime = tick()
         if currentTime - lastBrainrotCacheUpdate > BRAINROT_CACHE_TIMEOUT then
             brainrotCache = {}
-            local baseParts = Workspace:FindFirstChildOfClass("BasePart") and Workspace:GetChildren() or Workspace:GetDescendants()
-            for _, obj in pairs(baseParts) do
+            -- Corrigido: Buscar corretamente por BaseParts
+            for _, obj in pairs(Workspace:GetDescendants()) do
                 if obj:IsA("BasePart") and obj.Name:lower():find("brainrot") then
                     table.insert(brainrotCache, obj)
                 end
@@ -283,7 +283,7 @@ local BrainrotSystem = {
         for _, obj in pairs(brainrotCache) do
             if obj and obj.Parent then -- Check if object still exists
                 rootPart.CFrame = CFrame.new(obj.Position + Vector3.new(0, 3, 0))
-                wait(0.4)
+                task.wait(0.4)
                 -- If there's a collection remote, add it here
                 found = true
             end
@@ -664,8 +664,8 @@ local UISystem = {
     ]]
     updateButtonText = function(button, tempText, originalText, delay)
         button.Text = tempText
-        spawn(function()
-            wait(delay)
+        task.spawn(function()
+            task.wait(delay)
             if button and button.Parent then
                 button.Text = originalText
             end
