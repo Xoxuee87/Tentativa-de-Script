@@ -263,4 +263,173 @@ end
 local function toggleFly(state)
     flyEnabled = state
     if flyConnection then flyConnection:Disconnect() flyConnection = nil end
-    if
+    if flyBodyVelocity then pcall(function() flyBodyVelocity:Destroy() end) flyBodyVelocity = nil end
+
+    local char = player.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if state and hum and hrp then
+        flyBodyVelocity = Instance.new("BodyVelocity")
+        flyBodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        flyBodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        flyBodyVelocity.Parent = hrp
+
+        flyConnection = RunService.Heartbeat:Connect(function()
+            if not player.Character then return end
+            local hum2 = player.Character:FindFirstChildOfClass("Humanoid")
+            local hrp2 = player.Character:FindFirstChild("HumanoidRootPart")
+            if not (hum2 and hrp2) then return end
+            local camera = workspace.CurrentCamera
+            local move = hum2.MoveDirection
+            local look = camera.CFrame.LookVector
+            local right = camera.CFrame.RightVector
+            local velocity = Vector3.new(0,0,0)
+            if move.Magnitude > 0 then
+                velocity = (look * move.Z + right * move.X) * flySpeed
+            end
+            flyBodyVelocity.Velocity = velocity
+        end)
+    end
+end
+
+-- ESP
+local function createESP(plr)
+    if plr == player or not plr.Character or not plr.Character:FindFirstChild("Head") then return end
+    local head = plr.Character.Head
+    if head:FindFirstChild("PlayerESP") then return end
+    local tag = Instance.new("BillboardGui", head)
+    tag.Name = "PlayerESP"
+    tag.Size = UDim2.new(0, 100, 0, 30)
+    tag.AlwaysOnTop = true
+    tag.StudsOffset = Vector3.new(0, 2, 0)
+    local label = Instance.new("TextLabel", tag)
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Text = plr.Name
+    label.BackgroundTransparency = 1
+    label.TextColor3 = accent
+    label.TextStrokeTransparency = 0
+    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    label.Font = Enum.Font.GothamBold
+    label.TextScaled = true
+end
+
+local function removeESP(plr)
+    if plr.Character and plr.Character:FindFirstChild("Head") then
+        local esp = plr.Character.Head:FindFirstChild("PlayerESP")
+        if esp then esp:Destroy() end
+    end
+end
+
+local function updateAllESP()
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= player then
+            if espEnabled then createESP(plr) else removeESP(plr) end
+        end
+    end
+end
+
+-- Tabs
+local function loadPlayerTab()
+    createToggle("🚫 Noclip", toggleNoclip, noclipEnabled)
+    createToggle("🕊️ Fly", toggleFly, flyEnabled)
+    createButton("🔄 Reset Character", function()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.Health = 0
+        end
+    end)
+end
+
+local function loadVisualTab()
+    createToggle("👁 Player ESP", function(state)
+        espEnabled = state
+        updateAllESP()
+    end, espEnabled)
+    createToggle("💡 Full Bright", function(state)
+        fullbrightEnabled = state
+        if state then
+            Lighting.ClockTime = 14
+            Lighting.Brightness = 2
+            Lighting.FogEnd = 100000
+            Lighting.GlobalShadows = false
+        else
+            Lighting.ClockTime = 12
+            Lighting.Brightness = 1
+            Lighting.FogEnd = 100
+            Lighting.GlobalShadows = true
+        end
+    end, fullbrightEnabled)
+end
+
+local function loadTeleportTab()
+    createButton("⬆️ Teleport To Sky", function()
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if root then root.CFrame = root.CFrame + Vector3.new(0, 200, 0) end
+    end)
+    createButton("⬇️ Fall Down", function()
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if root then root.CFrame = root.CFrame - Vector3.new(0, 50, 0) end
+    end)
+end
+
+local function loadMiscTab()
+    createButton("🔄 Rejoin", function()
+        TeleportService:Teleport(game.PlaceId, player)
+    end)
+    createButton("📋 Copy Game Link", function()
+        if setclipboard then
+            setclipboard("https://www.roblox.com/games/" .. game.PlaceId)
+        end
+    end)
+end
+
+-- Criar Tabs
+local playerTab = createTab("Player", "👤", loadPlayerTab)
+createTab("Visual", "👁", loadVisualTab)
+createTab("Teleport", "📍", loadTeleportTab)
+createTab("Misc", "⚙️", loadMiscTab)
+
+-- Selecionar Player como default
+playerTab.BackgroundColor3 = accent
+currentTab = playerTab
+loadPlayerTab()
+
+-- Abrir GUI
+openBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+end)
+
+-- ESP para novos players
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function()
+        task.wait(1)
+        if espEnabled then createESP(plr) end
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+    removeESP(plr)
+end)
+
+player.CharacterRemoving:Connect(function()
+    if noclipConnection then noclipConnection:Disconnect() noclipConnection = nil end
+    if flyConnection then flyConnection:Disconnect() flyConnection = nil end
+    if flyBodyVelocity then pcall(function() flyBodyVelocity:Destroy() end) flyBodyVelocity = nil end
+    noclipStateMap = {}
+end)
+
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    if noclipEnabled then toggleNoclip(true) end
+    if flyEnabled then toggleFly(true) end
+end)
+
+-- Botão TP UP
+local tpUpBtn = Instance.new("TextButton")
+tpUpBtn.Size = UDim2.new(0, 50, 0, 50)
+tpUpBtn.Position = UDim2.new(1, -120, 1, -140)
+tpUpBtn.BackgroundColor3 = bg
+tpUpBtn.Text = "⬆️"
+tpUpBtn.TextColor3 = white
+tpUpBtn.Font = Enum.Font.GothamBold
+tpUpBtn.TextSize = 20
+Instance.new("UICorner", tpUpBtn).Corner
