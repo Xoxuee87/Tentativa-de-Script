@@ -11,10 +11,9 @@ local TeleportService = game:GetService("TeleportService")
 local player = Players.LocalPlayer
 
 -- Estados
-local flyEnabled, flyConnection, flyBodyVelocity
+local flyEnabled, flyConnection, flyBodyVelocity, flyGyro
 local flySpeed = 50
 local noclipEnabled, noclipConnection
-local noclipStateMap = {}
 local espPlayersEnabled = false
 local espChestsEnabled = false
 
@@ -103,71 +102,95 @@ local function createButton(parent, text, callback)
     btn.MouseButton1Click:Connect(callback)
 end
 
--- Player functions
+-- Função Fly corrigida
 local function toggleFly(state)
     flyEnabled = state
-    if flyConnection then flyConnection:Disconnect(); flyConnection = nil end
-    if flyBodyVelocity then flyBodyVelocity:Destroy(); flyBodyVelocity = nil end
+    if flyConnection then flyConnection:Disconnect(); flyConnection=nil end
+    if flyBodyVelocity then flyBodyVelocity:Destroy(); flyBodyVelocity=nil end
+    if flyGyro then flyGyro:Destroy(); flyGyro=nil end
 
-    local character = player.Character
-    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
-    if state and humanoid and rootPart then
-        flyBodyVelocity = Instance.new("BodyVelocity")
-        flyBodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-        flyBodyVelocity.Velocity = Vector3.new(0,0,0)
-        flyBodyVelocity.Parent = rootPart
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    if state then
+        local rootAttachment = hrp:FindFirstChild("RootAttachment")
+        if not rootAttachment then return end
+
+        flyBodyVelocity = Instance.new("AlignVelocity")
+        flyBodyVelocity.Attachment0 = rootAttachment
+        flyBodyVelocity.ApplyAtCenterOfMass = true
+        flyBodyVelocity.MaxForce = 9e9
+        flyBodyVelocity.Responsiveness = 200
+        flyBodyVelocity.Parent = hrp
+
+        flyGyro = Instance.new("AlignOrientation")
+        flyGyro.Attachment0 = rootAttachment
+        flyGyro.MaxTorque = 9e9
+        flyGyro.Responsiveness = 200
+        flyGyro.Parent = hrp
 
         flyConnection = RunService.Heartbeat:Connect(function()
-            if not player.Character then return end
-            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-            local hum = player.Character:FindFirstChildOfClass("Humanoid")
-            if not (hrp and hum) then return end
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not hum then return end
 
-            local camera = workspace.CurrentCamera
-            local move = hum.MoveDirection
-            local look, right = camera.CFrame.LookVector, camera.CFrame.RightVector
-
-            local vel = Vector3.new(0,0,0)
-            if move.Magnitude > 0 then
-                vel = (look * move.Z + right * move.X) * flySpeed
+            local cam = workspace.CurrentCamera
+            local dir = Vector3.new(0,0,0)
+            if hum.MoveDirection.Magnitude > 0 then
+                local look = cam.CFrame.LookVector
+                local right = cam.CFrame.RightVector
+                dir = (look * hum.MoveDirection.Z + right * hum.MoveDirection.X) * flySpeed
             end
-            flyBodyVelocity.Velocity = vel
+
+            flyBodyVelocity.Velocity = dir
+            flyGyro.CFrame = cam.CFrame
         end)
     end
 end
 
+-- Função Noclip corrigida
 local function toggleNoclip(state)
     noclipEnabled = state
-    if noclipConnection then noclipConnection:Disconnect(); noclipConnection = nil end
+    if noclipConnection then noclipConnection:Disconnect(); noclipConnection=nil end
     if state then
-        noclipStateMap = {}
         noclipConnection = RunService.Stepped:Connect(function()
+            if not player.Character then return end
+            local hum = player.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:ChangeState(Enum.HumanoidStateType.Physics)
+            end
             for _, part in pairs(player.Character:GetDescendants()) do
                 if part:IsA("BasePart") then
-                    if noclipStateMap[part] == nil then
-                        noclipStateMap[part] = part.CanCollide
-                    end
                     part.CanCollide = false
                 end
             end
         end)
-    else
-        for part, orig in pairs(noclipStateMap) do
-            if part and part.Parent then
-                part.CanCollide = orig
-            end
-        end
-        noclipStateMap = {}
+    end
+end
+
+-- Funções de velocidade e pulo corrigidas
+local function setWalkSpeed(val)
+    local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed = val
+    end
+end
+
+local function setJumpPower(val)
+    local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.UseJumpPower = true
+        hum.JumpPower = val
     end
 end
 
 -- Tabs
 local function loadPlayerTab(frame)
-    createButton(frame, "WalkSpeed +", function() player.Character.Humanoid.WalkSpeed += 10 end)
-    createButton(frame, "WalkSpeed -", function() player.Character.Humanoid.WalkSpeed = math.max(0, player.Character.Humanoid.WalkSpeed - 10) end)
-    createButton(frame, "JumpPower +", function() player.Character.Humanoid.JumpPower += 10 end)
-    createButton(frame, "JumpPower -", function() player.Character.Humanoid.JumpPower = math.max(0, player.Character.Humanoid.JumpPower - 10) end)
+    createButton(frame, "WalkSpeed +10", function() setWalkSpeed(player.Character.Humanoid.WalkSpeed + 10) end)
+    createButton(frame, "WalkSpeed -10", function() setWalkSpeed(math.max(0, player.Character.Humanoid.WalkSpeed - 10)) end)
+    createButton(frame, "JumpPower +10", function() setJumpPower(player.Character.Humanoid.JumpPower + 10) end)
+    createButton(frame, "JumpPower -10", function() setJumpPower(math.max(0, player.Character.Humanoid.JumpPower - 10)) end)
     createButton(frame, "Toggle Fly", function() toggleFly(not flyEnabled) end)
     createButton(frame, "Toggle Noclip", function() toggleNoclip(not noclipEnabled) end)
 end
@@ -213,6 +236,6 @@ loadPlayerTab(contentFrame)
 player.CharacterRemoving:Connect(function()
     if flyConnection then flyConnection:Disconnect(); flyConnection=nil end
     if flyBodyVelocity then flyBodyVelocity:Destroy(); flyBodyVelocity=nil end
+    if flyGyro then flyGyro:Destroy(); flyGyro=nil end
     if noclipConnection then noclipConnection:Disconnect(); noclipConnection=nil end
-    noclipStateMap = {}
 end)
