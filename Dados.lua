@@ -1,241 +1,182 @@
---// Chargement Rayfield UI
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+-- 💜 VIMTO HUB v3 | by NOTVIMTO | Delta Ready & Optimized
 
-local Window = Rayfield:CreateWindow({
-    Name = "Steal a Brainrot Pro Hub",
-    LoadingTitle = "Chargement en cours...",
-    LoadingSubtitle = "par ChatGPT",
-    ConfigurationSaving = {
-        Enabled = false
-    }
-})
+local player = game.Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
 
--- Tabs
-local MainTab = Window:CreateTab("Main")
-local CheatsTab = Window:CreateTab("Cheats")
-local AutoTab = Window:CreateTab("Auto")
-local MovementTab = Window:CreateTab("Movement")
-local UtilsTab = Window:CreateTab("Utilities")
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local Workspace = game:GetService("Workspace")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
--- Variables et RemoteEvents (remplacer par les remotes exacts trouvés dans le jeu)
-local RemoteEvents = {
-    BuyBrainrot = ReplicatedStorage:WaitForChild("BuyBrainrotEvent"),
-    StealBrainrot = ReplicatedStorage:WaitForChild("StealBrainrotEvent"),
-    LockBase = ReplicatedStorage:WaitForChild("LockBaseEvent"),
-    SellBrainrot = ReplicatedStorage:WaitForChild("SellBrainrotEvent"),
-    Rebirth = ReplicatedStorage:WaitForChild("RebirthEvent"),
-}
-
-local function getBaseCFrame()
-    -- Retourner la position de ta base (à modifier si nécessaire)
-    return CFrame.new(0, 10, 0) -- Exemple
+-- تنظيف
+if player.PlayerGui:FindFirstChild("VIMTO_HUB") then
+    player.PlayerGui.VIMTO_HUB:Destroy()
 end
 
--- Téléportation à la base
-MainTab:CreateButton({
-    Name = "Téléporter à la base",
-    Callback = function()
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character.HumanoidRootPart.CFrame = getBaseCFrame()
-        end
-    end
-})
+-- شاشة
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.Name = "VIMTO_HUB"
+gui.ResetOnSpawn = false
 
--- Fly (fonctionnel avec BodyVelocity)
-local fly = false
-local flying = false
-local bodyVelocity, bodyGyro
+-- ألوان
+local violet = Color3.fromRGB(140, 0, 255)
+local dark = Color3.fromRGB(35, 35, 35)
+local white = Color3.new(1, 1, 1)
 
-MovementTab:CreateToggle({
-    Name = "Fly (Bypass)",
-    CurrentValue = false,
-    Callback = function(v)
-        fly = v
-        if fly then
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local hrp = char.HumanoidRootPart
-                bodyVelocity = Instance.new("BodyVelocity")
-                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-                bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-                bodyVelocity.Parent = hrp
+-- زر الإظهار/الإخفاء
+local toggleButton = Instance.new("TextButton", gui)
+toggleButton.Size = UDim2.new(0, 60, 0, 60)
+toggleButton.Position = UDim2.new(0, 10, 0.5, -30)
+toggleButton.BackgroundColor3 = violet
+toggleButton.Text = "💜"
+toggleButton.TextColor3 = white
+toggleButton.TextSize = 22
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.Draggable = true
+toggleButton.Active = true
+Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(1, 0)
 
-                bodyGyro = Instance.new("BodyGyro")
-                bodyGyro.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-                bodyGyro.P = 1e4
-                bodyGyro.CFrame = hrp.CFrame
-                bodyGyro.Parent = hrp
+-- القائمة الرئيسية
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 500, 0, 340)
+frame.Position = UDim2.new(0.5, -250, 0.5, -170)
+frame.BackgroundColor3 = dark
+frame.Visible = false
+frame.Active = true
+frame.Draggable = true
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
-                flying = true
-            end
-        else
-            if bodyVelocity then bodyVelocity:Destroy() end
-            if bodyGyro then bodyGyro:Destroy() end
-            flying = false
-        end
-    end
-})
+-- العنوان
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 40)
+title.Text = "💜 VIMTO HUB v3"
+title.BackgroundColor3 = violet
+title.TextColor3 = white
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+Instance.new("UICorner", title).CornerRadius = UDim.new(0, 10)
 
-RunService.RenderStepped:Connect(function(delta)
-    if fly and flying and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = LocalPlayer.Character.HumanoidRootPart
-        local cam = workspace.CurrentCamera
-        local moveDir = Vector3.new(0, 0, 0)
+-- أقسام القوائم
+local mainFrame = Instance.new("Frame", frame)
+mainFrame.Position = UDim2.new(0, 10, 0, 50)
+mainFrame.Size = UDim2.new(0.5, -15, 1, -60)
+mainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 6)
 
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-            moveDir = moveDir + cam.CFrame.LookVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-            moveDir = moveDir - cam.CFrame.LookVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-            moveDir = moveDir - cam.CFrame.RightVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-            moveDir = moveDir + cam.CFrame.RightVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-            moveDir = moveDir + Vector3.new(0, 1, 0)
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-            moveDir = moveDir - Vector3.new(0, 1, 0)
-        end
+local espFrame = Instance.new("Frame", frame)
+espFrame.Position = UDim2.new(0.5, 5, 0, 50)
+espFrame.Size = UDim2.new(0.5, -15, 1, -60)
+espFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Instance.new("UICorner", espFrame).CornerRadius = UDim.new(0, 6)
 
-        moveDir = moveDir.Unit * 50
-        if moveDir.Magnitude == 0 then
-            bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-        else
-            bodyVelocity.Velocity = moveDir
-        end
-
-        bodyGyro.CFrame = cam.CFrame
-    end
+-- زر الإظهار/الإخفاء
+toggleButton.MouseButton1Click:Connect(function()
+ frame.Visible = not frame.Visible
 end)
 
--- ESP Joueurs + Brainrots
-local function createESP(parent, name, color)
-    if parent:FindFirstChild("ESP_" .. name) then return end
-    local bill = Instance.new("BillboardGui", parent)
-    bill.Name = "ESP_" .. name
-    bill.Size = UDim2.new(0, 100, 0, 40)
-    bill.Adornee = parent
-    bill.AlwaysOnTop = true
-
-    local label = Instance.new("TextLabel", bill)
-    label.BackgroundTransparency = 1
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.Text = name
-    label.TextColor3 = color
-    label.TextStrokeColor3 = Color3.new(0, 0, 0)
-    label.TextStrokeTransparency = 0
-    label.Font = Enum.Font.SourceSansBold
-    label.TextScaled = true
+-- صانع أزرار
+local function createButton(parent, text, callback)
+ local btn = Instance.new("TextButton", parent)
+ btn.Size = UDim2.new(1, -20, 0, 30)
+ btn.Position = UDim2.new(0, 10, 0, #parent:GetChildren() * 35)
+ btn.BackgroundColor3 = violet
+ btn.TextColor3 = white
+ btn.TextSize = 14
+ btn.Font = Enum.Font.Gotham
+ btn.Text = text
+ btn.AutoButtonColor = true
+ btn.MouseButton1Click:Connect(callback)
+ Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
 end
 
-CheatsTab:CreateToggle({
-    Name = "ESP Joueurs",
-    CurrentValue = false,
-    Callback = function(v)
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                createESP(plr.Character.HumanoidRootPart, plr.Name, Color3.fromRGB(255, 0, 0))
-            end
-        end
-    end
-})
+-- حالة الأزرار
+local infJump = false
+local speedBoost = false
+local jumpBoost = false
 
--- Auto Steal
-local autoSteal = false
-AutoTab:CreateToggle({
-    Name = "Auto Steal",
-    CurrentValue = false,
-    Callback = function(v)
-        autoSteal = v
-    end
-})
+-- MAIN BUTTONS 💥
 
-spawn(function()
-    while wait(0.5) do
-        if autoSteal and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local hrp = LocalPlayer.Character.HumanoidRootPart
-            for _, br in pairs(Workspace:FindFirstChild("Brainrots") and Workspace.Brainrots:GetChildren() or {}) do
-                if br:FindFirstChild("HumanoidRootPart") and (hrp.Position - br.HumanoidRootPart.Position).Magnitude < 50 then
-                    -- Interagir avec le Brainrot
-                    firetouchinterest(hrp, br.HumanoidRootPart, 0)
-                    firetouchinterest(hrp, br.HumanoidRootPart, 1)
-                    RemoteEvents.StealBrainrot:FireServer(br) -- Exemple pour voler
-                end
-            end
-        end
-    end
+createButton(mainFrame, "☁️ TP to Sky", function()
+ local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+ if hrp then
+  hrp.CFrame = hrp.CFrame + Vector3.new(0, 220, 0)
+ end
 end)
 
--- Auto Buy Brainrot
-local autoBuy = false
-AutoTab:CreateToggle({
-    Name = "Auto Buy Brainrot",
-    CurrentValue = false,
-    Callback = function(v)
-        autoBuy = v
-    end
-})
-
-AutoTab:CreateDropdown({
-    Name = "Choisir rareté à acheter",
-    Options = {"Common", "Rare", "Legendary", "Mythic"},
-    CurrentOption = "Common",
-    Callback = function(option)
-        -- Gérer les options d'achat ici
-        if autoBuy then
-            RemoteEvents.BuyBrainrot:FireServer(option)
-        end
-    end
-})
-
--- Auto Rebirth
-local autoRebirth = false
-AutoTab:CreateToggle({
-    Name = "Auto Rebirth",
-    CurrentValue = false,
-    Callback = function(v)
-        autoRebirth = v
-    end
-})
-
-spawn(function()
-    while wait(60) do
-        if autoRebirth then
-            RemoteEvents.Rebirth:FireServer() -- Exemple de rebirth
-        end
-    end
+createButton(mainFrame, "⬇️ Fall Down", function()
+ local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+ if hrp then
+  hrp.CFrame = hrp.CFrame - Vector3.new(0, 150, 0)
+ end
 end)
 
--- Anti AFK
-local antiAFK = false
-UtilsTab:CreateToggle({
-    Name = "Anti AFK",
-    CurrentValue = false,
-    Callback = function(v)
-        antiAFK = v
-    end
-})
-
-local VirtualUser = game:GetService("VirtualUser")
-spawn(function()
-    while wait(60) do
-        if antiAFK then
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new())
-        end
-    end
+createButton(mainFrame, "🕴️ Infinite Jump [Toggle]", function()
+ infJump = not infJump
+ if infJump then
+  game:GetService("UserInputService").JumpRequest:Connect(function()
+   if infJump and player.Character then
+    local hum = player.Character:FindFirstChildOfClass("Humanoid")
+    if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+   end
+  end)
+ end
 end)
 
--- Fin du script
-print("Steal a Brainrot Pro Hub chargé avec succès !")
+createButton(mainFrame, "⚡ Speed Boost [Toggle]", function()
+ speedBoost = not speedBoost
+ local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+ if hum then hum.WalkSpeed = speedBoost and 60 or 16 end
+end)
+
+createButton(mainFrame, "🦘 Jump Boost [Toggle]", function()
+ jumpBoost = not jumpBoost
+ local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+ if hum then hum.JumpPower = jumpBoost and 120 or 50 end
+end)
+
+-- ESP BUTTONS 👁️
+createButton(espFrame, "👁️ ESP Players", function()
+ for _, plr in pairs(game.Players:GetPlayers()) do
+  if plr ~= player and plr.Character and not plr.Character:FindFirstChild("PlayerESP") then
+   local hl = Instance.new("Highlight", plr.Character)
+   hl.Name = "PlayerESP"
+   hl.FillColor = Color3.fromRGB(255, 255, 0)
+   hl.OutlineColor = Color3.new(0, 0, 0)
+  end
+ end
+end)
+
+createButton(espFrame, "🧠 ESP Secret Brainrots", function()
+ for _, model in ipairs(workspace:GetDescendants()) do
+  if model:IsA("Model") and model:FindFirstChild("Head") then
+   local name = model.Name:lower()
+   if name:find("secret") or name:find("saturn") then
+    if not model:FindFirstChild("SecretESP") then
+     local hl = Instance.new("Highlight", model)
+     hl.Name = "SecretESP"
+     hl.FillColor = Color3.fromRGB(255, 0, 255)
+     hl.OutlineColor = Color3.new(0, 0, 0)
+    end
+   end
+  end
+ end
+end)
+
+createButton(espFrame, "🔒 ESP Lock Timer", function()
+ for _, obj in ipairs(workspace:GetDescendants()) do
+  if obj:IsA("TextLabel") and obj.Text:find("مقفل:") then
+   local parent = obj.Parent
+   if parent:IsA("Model") or parent:IsA("Part") then
+    local hl = Instance.new("Highlight", parent)
+    hl.Name = "LockESP"
+    hl.FillColor = Color3.fromRGB(0, 255, 255)
+    hl.OutlineColor = Color3.new(0, 0, 0)
+
+    -- مراقبة التايمر
+    task.spawn(function()
+     while task.wait(1) do
+      if obj and obj.Text and not obj.Text:find("%ds") then
+       obj.Text = "Unlocked ✅"
+       break
+      end
+     end
+    end)
+   end
+  end
+ end
+end)
