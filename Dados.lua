@@ -1,48 +1,54 @@
 --[[ 
-    Brainrot Hub - Script Simplificado e Funcional
+    Brainrot Hub - Script Simplificado, Funcional e Aprimorado
     Execute este script no jogo Steel Brainrot
     
-    Author: Kilo Code
+    Author: Kilo Code (Revisado por Assistente de IA)
     Date: 2025
 ]]
 
--- Services
+--[[ SERVIÇOS ]]
+-- É uma boa prática obter os serviços do Roblox usando GetService para garantir que o script não quebre.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
 
--- Player
+--[[ JOGADOR ]]
+-- Variáveis essenciais para controlar o personagem do jogador local.
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
--- Variáveis
+--[[ VARIÁVEIS GLOBAIS ]]
 local savedPosition = nil
-local isTeleporting = false
 
--- Função para teleporte simples e direto
+--[[ 
+    FUNÇÕES PRINCIPAIS
+]]
+
+-- Função para teleporte.
+-- ATENÇÃO: A manipulação direta do CFrame é facilmente detectada por sistemas anti-cheat.
 local function simpleTeleport(position)
     if not humanoidRootPart or not position then return false end
     
-    isTeleporting = true
-    
-    -- Teleporte direto
+    -- Teleporta o jogador diretamente para a nova posição.
     humanoidRootPart.CFrame = CFrame.new(position)
     
-    -- Verificar se funcionou
+    -- Adiciona uma pequena espera e verifica se o teleporte funcionou.
+    -- Alguns jogos podem "puxar" o jogador de volta (rubber banding). Esta é uma tentativa de contornar isso.
     task.wait(0.1)
-    if humanoidRootPart.Position:Distance(position) > 5 then
-        -- Se não funcionou, tentar novamente
+    if (humanoidRootPart.Position - position).Magnitude > 5 then
         humanoidRootPart.CFrame = CFrame.new(position)
     end
     
-    isTeleporting = false
     return true
 end
 
--- Função para encontrar objetos próximos
+-- Função para encontrar objetos próximos.
+-- ATENÇÃO: Usar GetDescendants() no Workspace inteiro pode causar LAG em jogos grandes.
+-- É uma abordagem simples, mas não a mais otimizada.
 local function findNearbyObjects()
     local objects = {}
     local playerPos = humanoidRootPart.Position
@@ -50,12 +56,13 @@ local function findNearbyObjects()
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj:IsA("BasePart") or obj:IsA("Model") then
             local objPos = obj.Position
+            -- Se for um modelo, tenta usar a posição de sua PrimaryPart.
             if obj:IsA("Model") and obj.PrimaryPart then
                 objPos = obj.PrimaryPart.Position
             end
             
             local distance = (playerPos - objPos).Magnitude
-            if distance < 100 then -- Objetos dentro de 100 studs
+            if distance < 100 then -- Considera objetos dentro de um raio de 100 studs.
                 table.insert(objects, {
                     object = obj,
                     distance = distance,
@@ -65,51 +72,60 @@ local function findNearbyObjects()
         end
     end
     
-    -- Ordenar por distância
+    -- Ordena a tabela para que os objetos mais próximos apareçam primeiro.
     table.sort(objects, function(a, b) return a.distance < b.distance end)
     return objects
 end
 
--- Função para listar todos os remotes
+-- Função para listar todos os Remotes (Event e Function) no ReplicatedStorage.
 local function listAllRemotes()
     print("=== REMOTES DISPONÍVEIS ===")
     local count = 0
     for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
         if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
-            print("Remote: " .. obj.Name .. " (" .. obj.ClassName .. ")")
+            print("- Remote: " .. obj:GetFullName() .. " (" .. obj.ClassName .. ")")
             count = count + 1
         end
     end
-    print("Total de remotes: " .. count)
+    print("Total de remotes encontrados: " .. count)
     print("==========================")
 end
 
--- Função para testar remotes
+-- Função para testar uma lista pré-definida de remotes comuns.
 local function testRemotes()
-    print("=== TESTANDO REMOTES ===")
-    local remotes = {"Buy", "Collect", "Money", "Shop", "Purchase", "Grab", "Take"}
+    print("=== TESTANDO REMOTES COMUNS ===")
+    local commonRemoteNames = {"Buy", "Collect", "Money", "Shop", "Purchase", "Grab", "Take", "Sell"}
     
-    for _, remoteName in pairs(remotes) do
-        local remote = ReplicatedStorage:FindFirstChild(remoteName)
+    for _, remoteName in pairs(commonRemoteNames) do
+        -- MELHORIA: Usamos FindFirstChild(remoteName, true) para buscar em todas as subpastas, não apenas na raiz.
+        local remote = ReplicatedStorage:FindFirstChild(remoteName, true) 
         if remote and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
-            print("Testando remote: " .. remoteName)
-            -- Tentar diferentes formatos
+            print("Testando remote encontrado: " .. remote:GetFullName())
+            -- pcall é usado para executar a função de forma segura, sem quebrar o script se houver um erro.
             pcall(function() remote:FireServer() end)
-            pcall(function() remote:FireServer("test") end)
-            pcall(function() remote:FireServer(1) end)
+            pcall(function() remote:FireServer("test_arg") end)
+            pcall(function() remote:FireServer(123) end)
         end
     end
     print("========================")
 end
 
--- Interface simples
+--[[ 
+    INTERFACE GRÁFICA (GUI)
+]]
+
+-- Garante que não haja outra GUI com o mesmo nome.
+if CoreGui:FindFirstChild("BrainrotHub") then
+    CoreGui:FindFirstChild("BrainrotHub"):Destroy()
+end
+
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "BrainrotHub"
-screenGui.Parent = game.CoreGui
+screenGui.Parent = CoreGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 400)
-frame.Position = UDim2.new(0.5, -150, 0.5, -200)
+frame.Size = UDim2.new(0, 300, 0, 450) -- Aumentei a altura para o novo botão
+frame.Position = UDim2.new(0.5, -150, 0.5, -225)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
 frame.BorderSizePixel = 0
 frame.Active = true
@@ -119,47 +135,55 @@ frame.Parent = screenGui
 -- Título
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
-title.Position = UDim2.new(0, 0, 0, 0)
 title.Text = "Brainrot Hub - Debug"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 18
-title.BackgroundTransparency = 1
+title.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
 title.Parent = frame
 
--- Botões
+-- Botão de Fechar (MELHORIA)
+local btnClose = Instance.new("TextButton")
+btnClose.Size = UDim2.new(0, 30, 0, 30)
+btnClose.Position = UDim2.new(1, -35, 0, 5)
+btnClose.Text = "X"
+btnClose.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+btnClose.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnClose.Font = Enum.Font.SourceSansBold
+btnClose.TextSize = 16
+btnClose.Parent = frame
+btnClose.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+-- Layout dos botões
 local buttonY = 50
 local buttonHeight = 35
 local buttonSpacing = 45
 
--- Botão Debug
-local btnDebug = Instance.new("TextButton")
-btnDebug.Size = UDim2.new(0.8, 0, 0, buttonHeight)
-btnDebug.Position = UDim2.new(0.1, 0, 0, buttonY)
-btnDebug.Text = "🔍 Debug - Listar Remotes"
-btnDebug.BackgroundColor3 = Color3.fromRGB(60, 60, 100)
-btnDebug.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnDebug.Font = Enum.Font.SourceSans
-btnDebug.TextSize = 14
-btnDebug.Parent = frame
+-- Função para criar botões e evitar repetição de código
+local function createButton(text, position, color, onClick)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.8, 0, 0, buttonHeight)
+    button.Position = UDim2.new(0.1, 0, 0, position)
+    button.Text = text
+    button.BackgroundColor3 = color
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.SourceSans
+    button.TextSize = 14
+    button.Parent = frame
+    button.MouseButton1Click:Connect(onClick)
+    return button
+end
 
-btnDebug.MouseButton1Click:Connect(function()
+-- Botão Debug Completo
+createButton("🔍 Debug Completo (Listar + Testar)", buttonY, Color3.fromRGB(60, 60, 100), function()
     listAllRemotes()
     testRemotes()
 end)
 
 -- Botão Salvar Posição
-local btnSave = Instance.new("TextButton")
-btnSave.Size = UDim2.new(0.8, 0, 0, buttonHeight)
-btnSave.Position = UDim2.new(0.1, 0, 0, buttonY + buttonSpacing)
-btnSave.Text = "💾 Salvar Posição (Z)"
-btnSave.BackgroundColor3 = Color3.fromRGB(60, 100, 60)
-btnSave.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnSave.Font = Enum.Font.SourceSans
-btnSave.TextSize = 14
-btnSave.Parent = frame
-
-btnSave.MouseButton1Click:Connect(function()
+local btnSave = createButton("💾 Salvar Posição (Z)", buttonY + buttonSpacing, Color3.fromRGB(60, 100, 60), function()
     if humanoidRootPart then
         savedPosition = humanoidRootPart.Position
         print("Posição salva: " .. tostring(savedPosition))
@@ -170,93 +194,60 @@ btnSave.MouseButton1Click:Connect(function()
 end)
 
 -- Botão Teleporte
-local btnTP = Instance.new("TextButton")
-btnTP.Size = UDim2.new(0.8, 0, 0, buttonHeight)
-btnTP.Position = UDim2.new(0.1, 0, 0, buttonY + buttonSpacing * 2)
-btnTP.Text = "🚀 Teleporte (X)"
-btnTP.BackgroundColor3 = Color3.fromRGB(100, 60, 60)
-btnTP.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnTP.Font = Enum.Font.SourceSans
-btnTP.TextSize = 14
-btnTP.Parent = frame
-
-btnTP.MouseButton1Click:Connect(function()
+createButton("🚀 Teleporte Salvo (X)", buttonY + buttonSpacing * 2, Color3.fromRGB(100, 60, 60), function()
     if savedPosition then
         simpleTeleport(savedPosition)
-        print("Teleportado para posição salva")
+        print("Teleportado para posição salva.")
     else
-        print("Nenhuma posição salva!")
+        print("Nenhuma posição salva! Pressione Z para salvar.")
     end
 end)
 
--- Botão Encontrar Objetos
-local btnFind = Instance.new("TextButton")
-btnFind.Size = UDim2.new(0.8, 0, 0, buttonHeight)
-btnFind.Position = UDim2.new(0.1, 0, 0, buttonY + buttonSpacing * 3)
-btnFind.Text = "🔍 Encontrar Objetos Próximos"
-btnFind.BackgroundColor3 = Color3.fromRGB(100, 100, 60)
-btnFind.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnFind.Font = Enum.Font.SourceSans
-btnFind.TextSize = 14
-btnFind.Parent = frame
-
-btnFind.MouseButton1Click:Connect(function()
+-- Botão Encontrar Objetos Próximos
+createButton("🗺️ Listar Objetos Próximos", buttonY + buttonSpacing * 3, Color3.fromRGB(100, 100, 60), function()
     local objects = findNearbyObjects()
-    print("=== OBJETOS PRÓXIMOS ===")
-    for i = 1, math.min(10, #objects) do
-        local obj = objects[i]
-        print(i .. ". " .. obj.object.Name .. " - Distância: " .. math.floor(obj.distance))
+    print("=== OBJETOS PRÓXIMOS (até 10) ===")
+    if #objects > 0 then
+        for i = 1, math.min(10, #objects) do
+            local objData = objects[i]
+            print(i .. ". " .. objData.object.Name .. " - Distância: " .. string.format("%.1f", objData.distance))
+        end
+    else
+        print("Nenhum objeto encontrado no raio de 100 studs.")
     end
-    print("========================")
-end)
-
--- Botão Testar Remotes
-local btnTest = Instance.new("TextButton")
-btnTest.Size = UDim2.new(0.8, 0, 0, buttonHeight)
-btnTest.Position = UDim2.new(0.1, 0, 0, buttonY + buttonSpacing * 4)
-btnTest.Text = "🧪 Testar Remotes"
-btnTest.BackgroundColor3 = Color3.fromRGB(100, 60, 100)
-btnTest.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnTest.Font = Enum.Font.SourceSans
-btnTest.TextSize = 14
-btnTest.Parent = frame
-
-btnTest.MouseButton1Click:Connect(function()
-    testRemotes()
+    print("===================================")
 end)
 
 -- Botão Teleporte para Objeto
-local btnTPObj = Instance.new("TextButton")
-btnTPObj.Size = UDim2.new(0.8, 0, 0, buttonHeight)
-btnTPObj.Position = UDim2.new(0.1, 0, 0, buttonY + buttonSpacing * 5)
-btnTPObj.Text = "🎯 TP para Objeto Mais Próximo"
-btnTPObj.BackgroundColor3 = Color3.fromRGB(60, 100, 100)
-btnTPObj.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnTPObj.Font = Enum.Font.SourceSans
-btnTPObj.TextSize = 14
-btnTPObj.Parent = frame
-
-btnTPObj.MouseButton1Click:Connect(function()
+createButton("🎯 TP Objeto Mais Próximo", buttonY + buttonSpacing * 4, Color3.fromRGB(60, 100, 100), function()
     local objects = findNearbyObjects()
     if #objects > 0 then
         local closest = objects[1]
-        local targetPos = closest.position + Vector3.new(0, 5, 0)
+        local targetPos = closest.position + Vector3.new(0, 5, 0) -- Teleporta 5 studs acima para não ficar preso
         simpleTeleport(targetPos)
         print("Teleportado para: " .. closest.object.Name)
     else
-        print("Nenhum objeto encontrado!")
+        print("Nenhum objeto encontrado para teleportar!")
     end
 end)
 
+-- Botão Testar Remotes Comuns (Individual)
+createButton("🧪 Testar Remotes Comuns", buttonY + buttonSpacing * 5, Color3.fromRGB(100, 60, 100), function()
+    testRemotes()
+end)
+
+
+--[[
+    INPUT E EVENTOS
+]]
+
 -- Atalhos de teclado
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    -- Impede a execução se o jogador estiver, por exemplo, digitando no chat.
     if gameProcessed then return end
     
     if input.KeyCode == Enum.KeyCode.Z then
-        if humanoidRootPart then
-            savedPosition = humanoidRootPart.Position
-            print("Posição salva: " .. tostring(savedPosition))
-        end
+        btnSave.MouseButton1Click:Fire() -- Dispara o evento do botão para reutilizar o código
     elseif input.KeyCode == Enum.KeyCode.X then
         if savedPosition then
             simpleTeleport(savedPosition)
@@ -266,17 +257,22 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- Atualizar personagem quando respawnar
+-- Atualiza as variáveis do personagem quando ele respawnar. Essencial para que o script continue funcionando.
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
-    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    humanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
+    print("Brainrot Hub: Novo personagem detectado. Variáveis atualizadas.")
 end)
 
--- Debug automático após 5 segundos
+--[[ INICIALIZAÇÃO ]]
+-- Mensagem de boas-vindas e instruções no console (Output).
 task.spawn(function()
-    task.wait(5)
+    task.wait(3)
+    print("================================")
     print("=== BRAINROT HUB CARREGADO ===")
-    print("Use Z para salvar posição, X para teleportar")
-    print("Clique nos botões para debug e testes")
+    print("Use Z para salvar sua posição.")
+    print("Use X para teleportar para a posição salva.")
+    print("A interface gráfica (GUI) está na sua tela.")
+    print("================================")
     listAllRemotes()
 end)
