@@ -1,0 +1,106 @@
+{
+    "version": "3.0",
+    "releaseDate": "2025-09-15",
+    "stable": true,
+    "downloadUrl": "https://raw.githubusercontent.com/YourRepo/BrainrotRobber/main/BrainrotRobber.lua",
+    "loaderUrl": "https://raw.githubusercontent.com/YourRepo/BrainrotRobber/main/loader.lua",
+    "changelog": {
+        "3.0": [
+            "🎯 Sistema de Auto-Farm completamente reescrito",
+            "👁️ ESP avançado com múltiplos tipos de objetos",
+            "🏃 Sistema de movimento com invisibilidade",
+            "🌐 Server hopping inteligente para brainrots raros",
+            "🎨 Interface moderna com sistema de abas",
+            "⌨️ Hotkeys para acesso rápido",
+            "📊 Sistema de logs detalhado",
+            "🔧 Configurações avançadas",
+            "🛡️ Sistema anti-detecção melhorado",
+            "⚡ Performance otimizada"
+        ],
+        "2.0": [
+            "🤖 Sistema básico de IA implementado",
+            "🔄 Auto-atualização básica",
+            "📱 Interface inicial",
+            "🔍 Detecção básica de brainrots"
+        ],
+        "1.0": [
+            "🚀 Versão inicial",
+            "⚡ Funcionalidades básicas de farm"
+        ]
+    },
+    "features": {
+        "autoFarm": {
+            "description": "Sistema inteligente de coleta automática",
+            "status": "stable"
+        },
+        "esp": {
+            "description": "Visualização avançada de objetos e jogadores",
+            "status": "stable"
+        },
+        "movement": {
+            "description": "Controles de movimento e invisibilidade",
+            "status": "stable"
+        },
+        "serverHopping": {
+            "description": "Busca automática por servidores com raros",
+            "status": "stable"
+        },
+        "gui": {
+            "description": "Interface gráfica moderna e intuitiva",
+            "status": "stable"
+        }
+    },
+    "compatibility": {
+        "robloxVersion": "latest",
+        "executors": {
+            "synapse": "✅ Totalmente compatível",
+            "scriptware": "✅ Totalmente compatível", 
+            "krnl": "✅ Compatível",
+            "fluxus": "✅ Compatível",
+            "oxygen": "⚠️ Parcialmente compatível",
+            "others": "❓ Pode funcionar"
+        },
+        "games": [
+            "Roube um Brainrot",
+            "Steal a Brainrot",
+            "Brainrot Simulator"
+        ]
+    },
+    "requirements": {
+        "httpEnabled": true,
+        "executorLevel": 5,
+        "memoryMB": 50,
+        "diskSpaceMB": 1
+    },
+    "support": {
+        "discord": "https://discord.gg/brainrotrobber",
+        "github": "https://github.com/YourRepo/BrainrotRobber",
+        "documentation": "https://docs.brainrotrobber.com"
+    },
+    "statistics": {
+        "totalDownloads": 0,
+        "activeUsers": 0,
+        "successRate": "95%",
+        "avgBrainrotsPerHour": 150
+    },
+    "knownIssues": [
+        {
+            "issue": "ESP pode causar lag em servidores muito cheios",
+            "severity": "low",
+            "workaround": "Reduza a distância máxima do ESP"
+        },
+        {
+            "issue": "Alguns executores podem ter problemas com invisibilidade",
+            "severity": "medium", 
+            "workaround": "Use apenas velocidade aumentada"
+        }
+    ],
+    "upcomingFeatures": [
+        "🤖 IA ainda mais avançada",
+        "📊 Dashboard com estatísticas",
+        "🎮 Suporte para mais jogos",
+        "🌐 Sistema de compartilhamento de servidores",
+        "🔧 Editor de configurações in-game",
+        "📱 Versão mobile otimizada"
+    ]
+}
