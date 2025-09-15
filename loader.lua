@@ -1,40 +1,148 @@
 --[[
-    🧠 Brainrot Robber Loader v1.0
-    Sistema de carregamento inteligente com verificações
+    🧠💀 STEAL A BRAINROT HUB - LOADER OFICIAL 💀🧠
+    Carregador oficial para o hub mais completo do Roblox
+    Desenvolvido especificamente para [💀] Steal a Brainrot
+    
+    🚀 INSTRUÇÕES DE USO:
+    1. Copie este código no seu executor
+    2. Execute e aguarde o carregamento
+    3. Pressione INSERT para abrir o hub
+    4. Divirta-se roubando brainrots! 🧠
 --]]
+
+-- Informações do Hub
+local HUB_INFO = {
+    name = "Steal a Brainrot Hub",
+    version = "4.0",
+    gameId = 109983668079237,
+    gameName = "[💀] Steal a Brainrot",
+    author = "Xoxuee87",
+    discord = "discord.gg/stealbrainrothub"
+}
+
+-- URLs de carregamento ATUALIZADAS para seu repo
+local URLS = {
+    main = "https://raw.githubusercontent.com/Xoxuee87/Tentativa-de-Script/Xoxuee87-patch-1/StealBrainrotHubComplete.lua",
+    backup1 = "https://raw.githubusercontent.com/Xoxuee87/Tentativa-de-Script/main/StealBrainrotHubComplete.lua",
+    backup2 = "https://github.com/Xoxuee87/Tentativa-de-Script/releases/latest/download/StealBrainrotHubComplete.lua"
+}
 
 local Loader = {}
 
--- Informações do script
-local SCRIPT_INFO = {
-    name = "Brainrot Robber",
-    version = "3.0",
-    author = "BrainrotDev",
-    game = "Roube um Brainrot"
-}
-
--- URLs para carregamento
-local URLS = {
-    main = "https://raw.githubusercontent.com/YourRepo/BrainrotRobber/main/BrainrotRobber.lua",
-    backup = "https://pastebin.com/raw/YourPastebinID"
-}
-
--- Função para criar notificação
-local function createNotification(title, text, duration)
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = title,
-        Text = text,
-        Duration = duration or 5
-    })
+-- 🎨 Interface de carregamento
+function Loader:createLoadingGUI()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "StealBrainrotLoader"
+    screenGui.Parent = game:GetService("Players").LocalPlayer.PlayerGui
+    screenGui.ResetOnSpawn = false
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 400, 0, 250)
+    frame.Position = UDim2.new(0.5, -200, 0.5, -125)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    frame.BorderSizePixel = 0
+    frame.Parent = screenGui
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 15)
+    corner.Parent = frame
+    
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(80, 140, 255)
+    stroke.Thickness = 3
+    stroke.Parent = frame
+    
+    -- Título
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 40)
+    title.BackgroundTransparency = 1
+    title.Text = "🧠💀 " .. HUB_INFO.name .. " v" .. HUB_INFO.version
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 18
+    title.Font = Enum.Font.GothamBold
+    title.Parent = frame
+    
+    -- Logo/Ícone
+    local icon = Instance.new("TextLabel")
+    icon.Size = UDim2.new(0, 60, 0, 60)
+    icon.Position = UDim2.new(0.5, -30, 0, 50)
+    icon.BackgroundTransparency = 1
+    icon.Text = "🧠"
+    icon.TextColor3 = Color3.fromRGB(80, 140, 255)
+    icon.TextSize = 40
+    icon.Font = Enum.Font.GothamBold
+    icon.Parent = frame
+    
+    -- Status
+    local status = Instance.new("TextLabel")
+    status.Size = UDim2.new(1, -20, 0, 20)
+    status.Position = UDim2.new(0, 10, 0, 120)
+    status.BackgroundTransparency = 1
+    status.Text = "Inicializando..."
+    status.TextColor3 = Color3.fromRGB(200, 200, 200)
+    status.TextSize = 12
+    status.Font = Enum.Font.Gotham
+    status.Parent = frame
+    
+    -- Barra de progresso
+    local progressBack = Instance.new("Frame")
+    progressBack.Size = UDim2.new(1, -40, 0, 6)
+    progressBack.Position = UDim2.new(0, 20, 0, 150)
+    progressBack.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    progressBack.BorderSizePixel = 0
+    progressBack.Parent = frame
+    
+    local progressCorner = Instance.new("UICorner")
+    progressCorner.CornerRadius = UDim.new(0, 3)
+    progressCorner.Parent = progressBack
+    
+    local progress = Instance.new("Frame")
+    progress.Size = UDim2.new(0, 0, 1, 0)
+    progress.BackgroundColor3 = Color3.fromRGB(80, 140, 255)
+    progress.BorderSizePixel = 0
+    progress.Parent = progressBack
+    
+    local progressCorner2 = Instance.new("UICorner")
+    progressCorner2.CornerRadius = UDim.new(0, 3)
+    progressCorner2.Parent = progress
+    
+    -- Info do jogo
+    local gameInfo = Instance.new("TextLabel")
+    gameInfo.Size = UDim2.new(1, -20, 0, 40)
+    gameInfo.Position = UDim2.new(0, 10, 0, 170)
+    gameInfo.BackgroundTransparency = 1
+    gameInfo.Text = "🎮 Jogo: " .. HUB_INFO.gameName .. "\n🆔 ID: " .. HUB_INFO.gameId
+    gameInfo.TextColor3 = Color3.fromRGB(150, 150, 150)
+    gameInfo.TextSize = 10
+    gameInfo.Font = Enum.Font.Gotham
+    gameInfo.Parent = frame
+    
+    -- Footer
+    local footer = Instance.new("TextLabel")
+    footer.Size = UDim2.new(1, 0, 0, 20)
+    footer.Position = UDim2.new(0, 0, 1, -25)
+    footer.BackgroundTransparency = 1
+    footer.Text = "👨‍💻 " .. HUB_INFO.author .. " | 💬 " .. HUB_INFO.discord
+    footer.TextColor3 = Color3.fromRGB(100, 100, 100)
+    footer.TextSize = 9
+    footer.Font = Enum.Font.Gotham
+    footer.Parent = frame
+    
+    return {
+        gui = screenGui,
+        status = status,
+        progress = progress,
+        frame = frame
+    }
 end
 
--- Função para verificar compatibilidade
-local function checkCompatibility()
+-- 🔍 Verificações de compatibilidade
+function Loader:checkCompatibility()
     local checks = {
         httpEnabled = false,
-        executor = "Unknown",
         gameCorrect = false,
-        robloxVersion = true
+        executor = "Unknown",
+        environment = false
     }
     
     -- Verifica HTTP
@@ -42,6 +150,9 @@ local function checkCompatibility()
         game:HttpGet("https://httpbin.org/get", true)
     end)
     checks.httpEnabled = success
+    
+    -- Verifica jogo
+    checks.gameCorrect = game.PlaceId == HUB_INFO.gameId
     
     -- Detecta executor
     if syn and syn.request then
@@ -58,196 +169,246 @@ local function checkCompatibility()
         checks.executor = "Desconhecido"
     end
     
-    -- Verifica se está no jogo correto
-    local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
-    if string.find(gameName:lower(), "brainrot") or string.find(gameName:lower(), "roube") then
-        checks.gameCorrect = true
-    end
+    -- Verifica ambiente
+    checks.environment = game:GetService("RunService"):IsClient()
     
     return checks
 end
 
--- Função para download com retry e backup
-local function downloadScript(maxRetries)
+-- 📥 Download com sistema de backup
+function Loader:downloadHub(ui, maxRetries)
     maxRetries = maxRetries or 3
     
-    -- Tenta URL principal
-    for i = 1, maxRetries do
-        local success, result = pcall(function()
-            return game:HttpGet(URLS.main, true)
-        end)
+    local urls = {URLS.main, URLS.backup1, URLS.backup2}
+    
+    for urlIndex, url in ipairs(urls) do
+        ui.status.Text = "Tentando URL " .. urlIndex .. "/" .. #urls .. "..."
         
-        if success and result and string.len(result) > 100 then
-            return true, result
+        for attempt = 1, maxRetries do
+            ui.status.Text = "Baixando... (Tentativa " .. attempt .. "/" .. maxRetries .. ")"
+            ui.progress.Size = UDim2.new((urlIndex - 1 + attempt/maxRetries) / #urls, 0, 1, 0)
+            
+            local success, result = pcall(function()
+                return game:HttpGet(url, true)
+            end)
+            
+            if success and result and string.len(result) > 1000 then
+                ui.status.Text = "Download concluído!"
+                ui.progress.Size = UDim2.new(1, 0, 1, 0)
+                return true, result
+            end
+            
+            if attempt < maxRetries then
+                wait(1)
+            end
         end
         
-        if i < maxRetries then
+        if urlIndex < #urls then
+            ui.status.Text = "URL " .. urlIndex .. " falhou, tentando próxima..."
             wait(1)
         end
     end
     
-    -- Tenta URL backup
-    for i = 1, maxRetries do
-        local success, result = pcall(function()
-            return game:HttpGet(URLS.backup, true)
-        end)
-        
-        if success and result and string.len(result) > 100 then
-            return true, result
-        end
-        
-        if i < maxRetries then
-            wait(1)
-        end
-    end
-    
-    return false, "Falha ao baixar script após múltiplas tentativas"
+    return false, "Falha em todas as URLs"
 end
 
--- Função principal de carregamento
-function Loader.load()
-    -- Cabeçalho
-    print(string.rep("=", 50))
-    print("🧠 " .. SCRIPT_INFO.name .. " v" .. SCRIPT_INFO.version)
-    print("📝 Desenvolvido por: " .. SCRIPT_INFO.author)
-    print("🎮 Jogo: " .. SCRIPT_INFO.game)
-    print(string.rep("=", 50))
+-- 🚀 Função principal de carregamento
+function Loader:load()
+    local ui = self:createLoadingGUI()
     
-    createNotification(
-        "🧠 Brainrot Robber",
-        "Iniciando carregamento...",
-        3
-    )
+    -- Cabeçalho no console
+    print(string.rep("=", 60))
+    print("🧠💀 " .. HUB_INFO.name .. " v" .. HUB_INFO.version)
+    print("🎮 " .. HUB_INFO.gameName)
+    print("👨‍💻 " .. HUB_INFO.author)
+    print("💬 " .. HUB_INFO.discord)
+    print(string.rep("=", 60))
     
-    -- Verificações de compatibilidade
-    print("🔍 Verificando compatibilidade...")
-    local compatibility = checkCompatibility()
+    -- Verificações
+    ui.status.Text = "Verificando compatibilidade..."
+    ui.progress.Size = UDim2.new(0.1, 0, 1, 0)
     
-    -- Relata compatibilidade
+    local compatibility = self:checkCompatibility()
+    
     print("📊 Relatório de Compatibilidade:")
-    print("   HTTP Habilitado: " .. (compatibility.httpEnabled and "✅" or "❌"))
+    print("   HTTP: " .. (compatibility.httpEnabled and "✅" or "❌"))
+    print("   Jogo: " .. (compatibility.gameCorrect and "✅" or "⚠️"))
     print("   Executor: " .. compatibility.executor)
-    print("   Jogo Correto: " .. (compatibility.gameCorrect and "✅" or "⚠️"))
+    print("   Ambiente: " .. (compatibility.environment and "✅" or "❌"))
     
-    -- Verifica requisitos críticos
+    -- Verificações críticas
     if not compatibility.httpEnabled then
-        local errorMsg = "❌ HTTP não está habilitado! Habilite HTTP requests no seu executor."
-        print(errorMsg)
-        createNotification("❌ Erro Crítico", "HTTP não habilitado!", 10)
+        ui.status.Text = "❌ HTTP não habilitado!"
+        ui.status.TextColor3 = Color3.fromRGB(255, 100, 100)
+        
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "❌ Erro Crítico",
+            Text = "HTTP requests não habilitado!",
+            Duration = 10
+        })
+        
+        wait(5)
+        ui.gui:Destroy()
+        return false
+    end
+    
+    if not compatibility.environment then
+        ui.status.Text = "❌ Ambiente não suportado!"
+        ui.status.TextColor3 = Color3.fromRGB(255, 100, 100)
+        wait(5)
+        ui.gui:Destroy()
         return false
     end
     
     if not compatibility.gameCorrect then
-        local warningMsg = "⚠️ Aviso: Pode não estar no jogo correto. O script pode não funcionar perfeitamente."
-        print(warningMsg)
-        createNotification("⚠️ Aviso", "Jogo pode estar incorreto!", 5)
+        ui.status.Text = "⚠️ Jogo diferente detectado"
+        ui.status.TextColor3 = Color3.fromRGB(255, 200, 100)
+        
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "⚠️ Aviso",
+            Text = "Hub otimizado para Steal a Brainrot",
+            Duration = 8
+        })
+        
+        wait(2)
     end
     
-    print("✅ Verificações básicas aprovadas!")
+    -- Download
+    ui.status.Text = "Baixando hub..."
+    ui.progress.Size = UDim2.new(0.3, 0, 1, 0)
     
-    -- Download do script
-    print("📥 Baixando script principal...")
-    createNotification("📥 Download", "Baixando script...", 3)
-    
-    local success, scriptContent = downloadScript(3)
+    local success, hubContent = self:downloadHub(ui, 3)
     
     if not success then
-        local errorMsg = "❌ Falha ao baixar script: " .. scriptContent
-        print(errorMsg)
-        createNotification("❌ Erro de Download", "Falha ao baixar!", 10)
+        ui.status.Text = "❌ Falha no download!"
+        ui.status.TextColor3 = Color3.fromRGB(255, 100, 100)
+        
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "❌ Erro de Download",
+            Text = hubContent,
+            Duration = 10
+        })
+        
+        wait(5)
+        ui.gui:Destroy()
         return false
     end
     
-    print("✅ Script baixado com sucesso! (" .. string.len(scriptContent) .. " bytes)")
+    -- Validação
+    ui.status.Text = "Validando código..."
+    ui.progress.Size = UDim2.new(0.7, 0, 1, 0)
     
-    -- Validação básica do script
-    if not string.find(scriptContent, "BrainrotRobber") then
-        print("❌ Script baixado parece estar corrompido!")
-        createNotification("❌ Erro", "Script corrompido!", 10)
+    if not string.find(hubContent, "StealBrainrotHub") then
+        ui.status.Text = "❌ Código inválido!"
+        ui.status.TextColor3 = Color3.fromRGB(255, 100, 100)
+        wait(5)
+        ui.gui:Destroy()
         return false
     end
     
-    -- Execução do script
-    print("🚀 Executando Brainrot Robber...")
-    createNotification("🚀 Carregando", "Iniciando script...", 3)
+    -- Execução
+    ui.status.Text = "Executando hub..."
+    ui.progress.Size = UDim2.new(0.9, 0, 1, 0)
     
-    local executeSuccess, executeResult = pcall(function()
-        return loadstring(scriptContent)()
+    local executeSuccess, executeError = pcall(function()
+        loadstring(hubContent)()
     end)
     
     if not executeSuccess then
-        local errorMsg = "❌ Erro ao executar script: " .. tostring(executeResult)
-        print(errorMsg)
-        createNotification("❌ Erro de Execução", "Falha ao executar!", 10)
+        ui.status.Text = "❌ Erro de execução!"
+        ui.status.TextColor3 = Color3.fromRGB(255, 100, 100)
+        warn("Erro ao executar hub: " .. tostring(executeError))
+        wait(5)
+        ui.gui:Destroy()
         return false
     end
     
     -- Sucesso
-    print("🎉 Brainrot Robber carregado com sucesso!")
-    print("🔧 Controles:")
-    print("   INSERT - Abrir/Fechar GUI")
-    print("   F1 - Toggle Velocidade")
-    print("   F2 - Toggle Invisibilidade")
-    print("   F3 - Toggle Player ESP")
-    print("   F4 - Toggle Brainrot ESP")
-    print(string.rep("=", 50))
+    ui.status.Text = "✅ Hub carregado com sucesso!"
+    ui.status.TextColor3 = Color3.fromRGB(100, 255, 100)
+    ui.progress.Size = UDim2.new(1, 0, 1, 0)
     
-    createNotification(
-        "🎉 Sucesso!",
-        "Brainrot Robber carregado! Pressione INSERT para abrir.",
-        7
-    )
+    print("🎉 Hub carregado com sucesso!")
+    print("⌨️ Pressione INSERT para abrir")
+    print("🔧 Hotkeys disponíveis:")
+    print("   F1 - Auto-Steal")
+    print("   F2 - Speed Boost") 
+    print("   F3 - Fly")
+    print("   F4 - Player ESP")
+    print("   F5 - Brainrot ESP")
+    print("   F6 - Emergency Stop")
+    print("   F7 - Server Hop")
+    print("   F8 - Scan Game")
+    print(string.rep("=", 60))
+    
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "🎉 Sucesso!",
+        Text = "Hub carregado! Pressione INSERT para abrir",
+        Duration = 8
+    })
+    
+    -- Remove interface de carregamento após 3 segundos
+    wait(3)
+    if ui.gui then
+        ui.gui:Destroy()
+    end
     
     return true
 end
 
--- Função para atualização automática
-function Loader.checkUpdate()
-    print("🔄 Verificando atualizações...")
+-- ⚡ Carregamento rápido para usuários experientes
+function Loader:quickLoad()
+    print("⚡ Carregamento rápido ativado...")
     
-    local success, versionData = pcall(function()
-        return game:HttpGet("https://raw.githubusercontent.com/YourRepo/BrainrotRobber/main/version.json", true)
+    local success, content = pcall(function()
+        return game:HttpGet(URLS.main, true)
     end)
     
-    if success then
-        local data = game:GetService("HttpService"):JSONDecode(versionData)
-        if data.version ~= SCRIPT_INFO.version then
-            print("🆕 Nova versão disponível: " .. data.version)
-            createNotification("🆕 Atualização", "Nova versão: " .. data.version, 5)
-            return true, data
-        end
+    if success and content and string.len(content) > 1000 then
+        loadstring(content)()
+        print("✅ Hub carregado rapidamente!")
+        
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "⚡ Quick Load",
+            Text = "Hub carregado rapidamente!",
+            Duration = 3
+        })
+        
+        return true
     end
     
-    return false, nil
+    print("❌ Quick load falhou, usando carregamento normal...")
+    return self:load()
 end
 
--- Função de carregamento com verificação de atualização
-function Loader.loadWithUpdate()
-    -- Verifica atualizações primeiro
-    local hasUpdate, updateData = Loader.checkUpdate()
-    
-    if hasUpdate then
-        print("📦 Baixando versão atualizada...")
-        -- Atualiza URLs se necessário
-        if updateData.downloadUrl then
-            URLS.main = updateData.downloadUrl
-        end
-    end
-    
-    -- Carrega o script
-    return Loader.load()
-end
-
--- Auto-execução
+-- 🎯 Auto-execução com detecção inteligente
 spawn(function()
-    wait(0.5) -- Pequeno delay para garantir que tudo carregou
+    wait(0.5) -- Aguarda inicialização
     
-    local success = Loader.loadWithUpdate()
+    -- Detecta se usuário quer carregamento rápido
+    local quickLoad = false
+    
+    -- Verifica se já executou antes (arquivo existe)
+    if isfile and isfile("StealBrainrotHub_Settings.json") then
+        quickLoad = true
+    end
+    
+    -- Verifica executor avançado
+    if syn or getgenv().ScriptWare then
+        quickLoad = true
+    end
+    
+    local success
+    if quickLoad then
+        success = Loader:quickLoad()
+    else
+        success = Loader:load()
+    end
     
     if success then
-        print("🧠 Sistema pronto para roubar brainrots! 🚀")
+        print("🧠💀 Steal a Brainrot Hub operacional! 💀🧠")
     else
-        print("💥 Falha no carregamento. Verifique os requisitos.")
+        warn("💥 Falha no carregamento do hub")
     end
 end)
 

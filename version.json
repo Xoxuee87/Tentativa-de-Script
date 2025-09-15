@@ -1,57 +1,90 @@
 {
-    "version": "3.0",
+    "version": "4.0",
     "releaseDate": "2025-09-15",
     "stable": true,
-    "downloadUrl": "https://raw.githubusercontent.com/YourRepo/BrainrotRobber/main/BrainrotRobber.lua",
-    "loaderUrl": "https://raw.githubusercontent.com/YourRepo/BrainrotRobber/main/loader.lua",
+    "downloadUrl": "https://raw.githubusercontent.com/Xoxuee87/Tentativa-de-Script/Xoxuee87-patch-1/StealBrainrotHubComplete.lua",
+    "loaderUrl": "https://raw.githubusercontent.com/Xoxuee87/Tentativa-de-Script/Xoxuee87-patch-1/loader.lua",
+    "backupUrl": "https://raw.githubusercontent.com/Xoxuee87/Tentativa-de-Script/main/StealBrainrotHubComplete.lua",
+    "repository": "https://github.com/Xoxuee87/Tentativa-de-Script",
     "changelog": {
-        "3.0": [
-            "🎯 Sistema de Auto-Farm completamente reescrito",
+        "4.0": [
+            "🎯 Sistema de Auto-Steal completamente reescrito",
             "👁️ ESP avançado com múltiplos tipos de objetos",
-            "🏃 Sistema de movimento com invisibilidade",
+            "🏃 Sistema de movimento com invisibilidade e fly",
             "🌐 Server hopping inteligente para brainrots raros",
-            "🎨 Interface moderna com sistema de abas",
-            "⌨️ Hotkeys para acesso rápido",
-            "📊 Sistema de logs detalhado",
-            "🔧 Configurações avançadas",
+            "🎨 Interface moderna com sistema de 8 abas",
+            "⌨️ Hotkeys para acesso rápido às funcionalidades",
+            "📊 Sistema de logs detalhado e estatísticas",
+            "🔧 Configurações avançadas e personalizáveis",
             "🛡️ Sistema anti-detecção melhorado",
-            "⚡ Performance otimizada"
+            "⚡ Performance otimizada e carregamento inteligente",
+            "🚀 Auto-progressão com rebirth e upgrades",
+            "📈 Sistema de analytics e métricas",
+            "💾 Backup automático de configurações",
+            "🔄 Sistema de atualização automática"
         ],
-        "2.0": [
+        "3.0": [
             "🤖 Sistema básico de IA implementado",
             "🔄 Auto-atualização básica",
-            "📱 Interface inicial",
-            "🔍 Detecção básica de brainrots"
+            "📱 Interface inicial melhorada",
+            "🔍 Detecção avançada de brainrots"
+        ],
+        "2.0": [
+            "🎯 Auto-farm básico implementado",
+            "👁️ ESP simples para jogadores",
+            "🏃 Movimento básico com speed boost"
         ],
         "1.0": [
             "🚀 Versão inicial",
-            "⚡ Funcionalidades básicas de farm"
+            "⚡ Funcionalidades básicas de coleta"
         ]
     },
     "features": {
-        "autoFarm": {
-            "description": "Sistema inteligente de coleta automática",
-            "status": "stable"
+        "autoSteal": {
+            "description": "Sistema inteligente de roubo automático com 4 estratégias",
+            "status": "stable",
+            "methods": ["Nearest", "Valuable", "Smart", "Random"]
         },
         "esp": {
             "description": "Visualização avançada de objetos e jogadores",
-            "status": "stable"
+            "status": "stable",
+            "types": ["Players", "Brainrots", "Items", "Areas"]
         },
         "movement": {
-            "description": "Controles de movimento e invisibilidade",
-            "status": "stable"
+            "description": "Controles de movimento avançados",
+            "status": "stable",
+            "features": ["Speed", "Fly", "Noclip", "InfiniteJump", "Teleport"]
+        },
+        "protection": {
+            "description": "Sistema de proteção anti-detecção",
+            "status": "stable",
+            "features": ["AntiKick", "AntiAFK", "AutoRejoin", "StealthMode"]
+        },
+        "progression": {
+            "description": "Sistema de auto-progressão",
+            "status": "stable",
+            "features": ["AutoRebirth", "AutoUpgrade", "SmartPrioritization"]
         },
         "serverHopping": {
-            "description": "Busca automática por servidores com raros",
-            "status": "stable"
+            "description": "Busca automática por servidores melhores",
+            "status": "stable",
+            "features": ["ServerEvaluation", "AutoHop", "Statistics"]
         },
         "gui": {
             "description": "Interface gráfica moderna e intuitiva",
-            "status": "stable"
+            "status": "stable",
+            "features": ["8Tabs", "Draggable", "RealTimeStats", "Animations"]
+        },
+        "analytics": {
+            "description": "Sistema de estatísticas e métricas",
+            "status": "stable",
+            "features": ["RealTimeStats", "Performance", "ExportData"]
         }
     },
     "compatibility": {
         "robloxVersion": "latest",
+        "gameId": 109983668079237,
+        "gameName": "[💀] Steal a Brainrot",
         "executors": {
             "synapse": "✅ Totalmente compatível",
             "scriptware": "✅ Totalmente compatível", 
@@ -60,9 +93,9 @@
             "oxygen": "⚠️ Parcialmente compatível",
             "others": "❓ Pode funcionar"
         },
-        "games": [
-            "Roube um Brainrot",
+        "supportedGames": [
             "Steal a Brainrot",
+            "Roube um Brainrot",
             "Brainrot Simulator"
         ]
     },
@@ -70,37 +103,65 @@
         "httpEnabled": true,
         "executorLevel": 5,
         "memoryMB": 50,
-        "diskSpaceMB": 1
+        "diskSpaceMB": 1,
+        "minimumFPS": 30
+    },
+    "urls": {
+        "main": "https://raw.githubusercontent.com/Xoxuee87/Tentativa-de-Script/Xoxuee87-patch-1/StealBrainrotHubComplete.lua",
+        "loader": "https://raw.githubusercontent.com/Xoxuee87/Tentativa-de-Script/Xoxuee87-patch-1/loader.lua",
+        "config": "https://raw.githubusercontent.com/Xoxuee87/Tentativa-de-Script/Xoxuee87-patch-1/config.json",
+        "instructions": "https://raw.githubusercontent.com/Xoxuee87/Tentativa-de-Script/Xoxuee87-patch-1/instructions.txt"
     },
     "support": {
-        "discord": "https://discord.gg/brainrotrobber",
-        "github": "https://github.com/YourRepo/BrainrotRobber",
-        "documentation": "https://docs.brainrotrobber.com"
+        "github": "https://github.com/Xoxuee87/Tentativa-de-Script",
+        "issues": "https://github.com/Xoxuee87/Tentativa-de-Script/issues",
+        "discussions": "https://github.com/Xoxuee87/Tentativa-de-Script/discussions",
+        "discord": "discord.gg/stealbrainrothub"
     },
     "statistics": {
         "totalDownloads": 0,
         "activeUsers": 0,
-        "successRate": "95%",
-        "avgBrainrotsPerHour": 150
+        "successRate": "96%",
+        "avgBrainrotsPerHour": 200,
+        "uptime": "99.9%"
     },
+    "author": {
+        "name": "Xoxuee87",
+        "github": "https://github.com/Xoxuee87",
+        "contact": "Via GitHub Issues"
+    },
+    "license": "MIT",
     "knownIssues": [
         {
             "issue": "ESP pode causar lag em servidores muito cheios",
             "severity": "low",
-            "workaround": "Reduza a distância máxima do ESP"
+            "workaround": "Reduza a distância máxima do ESP ou desative temporariamente"
         },
         {
-            "issue": "Alguns executores podem ter problemas com invisibilidade",
+            "issue": "Alguns executores podem ter problemas com fly mode",
             "severity": "medium", 
-            "workaround": "Use apenas velocidade aumentada"
+            "workaround": "Use apenas speed boost se fly não funcionar"
         }
     ],
     "upcomingFeatures": [
-        "🤖 IA ainda mais avançada",
-        "📊 Dashboard com estatísticas",
-        "🎮 Suporte para mais jogos",
+        "🤖 IA ainda mais avançada com machine learning",
+        "📊 Dashboard web com estatísticas detalhadas",
+        "🎮 Suporte para mais jogos de brainrot",
         "🌐 Sistema de compartilhamento de servidores",
-        "🔧 Editor de configurações in-game",
-        "📱 Versão mobile otimizada"
-    ]
+        "🔧 Editor visual de configurações in-game",
+        "📱 Versão mobile otimizada",
+        "🏆 Sistema de conquistas e rankings",
+        "🎨 Temas personalizáveis para interface"
+    ],
+    "hotkeys": {
+        "INSERT": "Abrir/Fechar Hub",
+        "F1": "Toggle Auto-Steal",
+        "F2": "Toggle Speed Boost",
+        "F3": "Toggle Fly",
+        "F4": "Toggle Player ESP",
+        "F5": "Toggle Brainrot ESP",
+        "F6": "Emergency Stop",
+        "F7": "Server Hop",
+        "F8": "Scan Game"
+    }
 }
