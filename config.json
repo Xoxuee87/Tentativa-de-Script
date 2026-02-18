@@ -1,0 +1,148 @@
+{
+    "script": {
+        "name": "Brainrot Robber",
+        "version": "3.0",
+        "author": "BrainrotDev",
+        "lastUpdate": "2025-09-15"
+    },
+    "features": {
+        "autoFarm": {
+            "enabled": false,
+            "minValue": 1000,
+            "maxDistance": 200,
+            "delayBetweenActions": 0.5,
+            "prioritizeRares": true,
+            "autoCollect": true
+        },
+        "esp": {
+            "players": {
+                "enabled": false,
+                "color": [255, 100, 100],
+                "showDistance": true,
+                "maxDistance": 1000
+            },
+            "brainrots": {
+                "enabled": false,
+                "color": [100, 255, 100],
+                "showValue": true,
+                "maxDistance": 500
+            },
+            "rareBrainrots": {
+                "enabled": false,
+                "color": [255, 255, 100],
+                "showValue": true,
+                "maxDistance": 1000
+            },
+            "baseTimer": {
+                "enabled": false,
+                "color": [100, 100, 255],
+                "showCountdown": true
+            }
+        },
+        "movement": {
+            "speedBoost": {
+                "enabled": false,
+                "normalSpeed": 16,
+                "boostSpeed": 50
+            },
+            "jumpBoost": {
+                "enabled": false,
+                "normalJump": 50,
+                "boostJump": 120
+            },
+            "invisibility": {
+                "enabled": false,
+                "affectAccessories": true,
+                "keepCollision": false
+            }
+        },
+        "serverHopping": {
+            "enabled": false,
+            "searchForRares": true,
+            "maxServersToCheck": 20,
+            "delayBetweenHops": 5
+        }
+    },
+    "rareBrainrots": [
+        "Golden Skibidi",
+        "Diamond Ohio", 
+        "Rainbow Sigma",
+        "Legendary Gyatt",
+        "Mythic Rizz",
+        "Cosmic Brainrot",
+        "Shadow Mewing",
+        "Crystal Fanum",
+        "Platinum Sigma",
+        "Ethereal Rizz",
+        "Void Skibidi",
+        "Aurora Ohio",
+        "Quantum Gyatt",
+        "Celestial Mewing"
+    ],
+    "keywords": {
+        "brainrots": [
+            "brainrot",
+            "skibidi",
+            "ohio", 
+            "sigma",
+            "rizz",
+            "gyatt",
+            "mewing",
+            "fanum",
+            "tax",
+            "aura",
+            "grimace",
+            "livvy"
+        ],
+        "valuable": [
+            "golden",
+            "diamond",
+            "rainbow",
+            "legendary",
+            "mythic",
+            "cosmic",
+            "shadow",
+            "crystal",
+            "platinum",
+            "ethereal",
+            "void",
+            "aurora",
+            "quantum",
+            "celestial"
+        ]
+    },
+    "gui": {
+        "theme": "dark",
+        "transparency": 0.1,
+        "animations": true,
+        "hotkeys": {
+            "toggleGUI": "Insert",
+            "speedBoost": "F1",
+            "invisibility": "F2",
+            "playerESP": "F3",
+            "brainrotESP": "F4",
+            "autoFarm": "F5"
+        },
+        "colors": {
+            "primary": [60, 120, 255],
+            "secondary": [25, 25, 35],
+            "success": [100, 255, 100],
+            "warning": [255, 200, 100],
+            "error": [255, 100, 100],
+            "text": [255, 255, 255]
+        }
+    },
+    "antiDetection": {
+        "humanizeDelays": true,
+        "randomizeMovement": true,
+        "avoidSuspiciousPatterns": true,
+        "monitorModerators": true,
+        "lowProfileMode": false
+    },
+    "performance": {
+        "maxESPObjects": 100,
+        "updateFrequency": 0.1,
+        "cleanupInterval": 30,
+        "maxLogEntries": 100
+    }
+}

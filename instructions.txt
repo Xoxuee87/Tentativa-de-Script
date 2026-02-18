@@ -1,0 +1,306 @@
+🧠 BRAINROT ROBBER - INSTRUÇÕES COMPLETAS
+=============================================
+
+📋 ÍNDICE:
+1. Instalação e Carregamento
+2. Interface e Controles
+3. Funcionalidades Principais
+4. Configurações Avançadas
+5. Dicas e Truques
+6. Solução de Problemas
+7. Atualizações
+
+=============================================
+
+1. 📥 INSTALAÇÃO E CARREGAMENTO
+=============================================
+
+MÉTODO 1 - Carregamento Direto:
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/YourRepo/BrainrotRobber/main/BrainrotRobber.lua"))()
+```
+
+MÉTODO 2 - Com Loader (Recomendado):
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/YourRepo/BrainrotRobber/main/loader.lua"))()
+```
+
+REQUISITOS:
+✅ HTTP habilitado no executor
+✅ Executor nível 5 ou superior
+✅ Roblox atualizado
+✅ Estar no jogo "Roube um Brainrot"
+
+EXECUTORES TESTADOS:
+🥇 Synapse X - Perfeito
+🥇 Script-Ware - Perfeito  
+🥈 KRNL - Funciona bem
+🥈 Fluxus - Funciona bem
+🥉 Oxygen U - Algumas limitações
+
+=============================================
+
+2. 🎮 INTERFACE E CONTROLES
+=============================================
+
+HOTKEYS (TECLAS DE ATALHO):
+📝 INSERT - Abrir/Fechar GUI principal
+⚡ F1 - Ativar/Desativar velocidade aumentada
+👻 F2 - Ativar/Desativar invisibilidade
+👥 F3 - Ativar/Desativar ESP de jogadores
+🧠 F4 - Ativar/Desativar ESP de brainrots
+🚜 F5 - Ativar/Desativar auto-farm
+
+NAVEGAÇÃO DA GUI:
+🏠 Principal - Status e controles principais
+👁️ ESP - Configurações de visualização
+🚜 Farm - Controles de coleta automática
+🏃 Movimento - Velocidade e invisibilidade
+🌐 Servidores - Mudança de servidor
+📝 Logs - Histórico de ações
+
+CONTROLES:
+🖱️ Clique e arraste - Mover a janela
+❌ Botão X - Fechar GUI (ou INSERT)
+🔘 Botões coloridos - Verde=Ativo, Vermelho=Inativo
+
+=============================================
+
+3. 🎯 FUNCIONALIDADES PRINCIPAIS
+=============================================
+
+AUTO-FARM INTELIGENTE:
+🎯 Coleta automaticamente os brainrots mais valiosos
+💎 Prioriza brainrots raros primeiro
+📏 Calcula melhor rota (valor/distância)
+⚡ Teleporte instantâneo para targets
+🔄 Scan contínuo por novos brainrots
+⚙️ Configurável (valor mínimo, distância, etc.)
+
+COMO USAR:
+1. Abra a aba "Farm"
+2. Clique em "Iniciar Auto Farm"
+3. O script fará tudo automaticamente
+4. Monitor os logs para ver progresso
+
+ESP (VISUALIZAÇÃO):
+👥 Jogadores - Mostra nome e distância
+🧠 Brainrots - Localização de todos brainrots
+💎 Brainrots Raros - Destaque especial
+⏰ Timer de Base - Countdown de proteção
+📏 Linhas conectoras - Do seu personagem aos objetos
+🎨 Cores customizáveis
+
+COMO USAR:
+1. Abra a aba "ESP"
+2. Ative os tipos desejados
+3. Objetos aparecerão com caixas coloridas
+4. Linhas mostram direção
+
+MOVIMENTO AVANÇADO:
+💨 Velocidade - 16 → 50+ walkspeed
+🦘 Pulo Alto - 50 → 120+ jumppower
+👻 Invisibilidade - Torna-se invisível
+📍 Teleporte - Para brainrots ou spawn
+
+COMO USAR:
+1. Use hotkeys F1, F2 para ativar rapidamente
+2. Ou use a aba "Movimento"
+3. Combine habilidades para máxima eficiência
+
+SERVER HOPPING:
+🔍 Procura servidores com brainrots raros
+🔄 Muda automaticamente de servidor
+📊 Conta servidores verificados
+⏹️ Para quando encontrar raros
+
+COMO USAR:
+1. Abra a aba "Servidores"
+2. Clique "Iniciar Busca por Raros"
+3. Aguarde encontrar servidor bom
+4. Para manualmente se necessário
+
+=============================================
+
+4. ⚙️ CONFIGURAÇÕES AVANÇADAS
+=============================================
+
+FARM SETTINGS:
+💰 Valor Mínimo - Só coleta acima deste valor
+📏 Distância Máxima - Área de busca
+⏱️ Delay entre Ações - Velocidade de operação
+🎯 Priorizar Raros - Focar em brainrots valiosos
+
+ESP SETTINGS:
+🎨 Cores - Personalize cores de cada tipo
+📏 Distância Máxima - Até onde mostrar objetos
+📊 Informações - Que dados mostrar
+
+MOVEMENT SETTINGS:
+⚡ Velocidades - Normal vs Boost
+🦘 Força do Pulo - Normal vs Boost
+👻 Invisibilidade - Configurações de stealth
+
+ARQUIVO CONFIG.JSON:
+📝 Edite config.json para configurações avançadas
+🔄 Reinicie script para aplicar mudanças
+💾 Backup suas configurações
+
+=============================================
+
+5. 💡 DICAS E TRUQUES
+=============================================
+
+MAXIMIZANDO EFICIÊNCIA:
+🎯 Configure valor mínimo alto para focar em raros
+👻 Use invisibilidade em servidores lotados
+⚡ Velocidade máxima para movimentação rápida
+🔍 ESP de raros para encontrar tesouros
+🌐 Server hop quando servidor está vazio
+
+ESTRATÉGIAS AVANÇADAS:
+🕐 Farm durante horários menos movimentados
+🎭 Alterne entre invisível e visível
+📊 Monitor logs para otimizar configurações
+🎯 Focar em brainrots raros específicos
+🔄 Reiniciar script se necessário
+
+SEGURANÇA:
+⚠️ Não abuse da velocidade perto de moderadores
+🕐 Use delays maiores se suspeitar de anti-cheat
+🎭 Varie padrões de movimento
+👀 Monitore outros jogadores suspeitos
+🔇 Mantenha perfil baixo
+
+PERFORMANCE:
+📉 Reduza distância ESP se estiver com lag
+🧹 Limpe ESP periodicamente
+🔄 Reinicie script se consumir muita memória
+⚡ Feche outros scripts desnecessários
+
+=============================================
+
+6. 🔧 SOLUÇÃO DE PROBLEMAS
+=============================================
+
+PROBLEMAS COMUNS:
+
+❌ "HTTP não habilitado"
+SOLUÇÃO: Habilite HTTP requests no seu executor
+
+❌ Script não carrega
+SOLUÇÕES:
+- Verifique conexão com internet
+- Tente URL backup
+- Reinicie Roblox
+- Use executor diferente
+
+❌ ESP não aparece
+SOLUÇÕES:
+- Verifique se está ativado
+- Escaneie por brainrots primeiro
+- Reduza distância máxima
+- Limpe ESP e reative
+
+❌ Auto-farm não funciona
+SOLUÇÕES:
+- Verifique se há brainrots no mapa
+- Reduza valor mínimo
+- Aumente distância de busca
+- Reinicie auto-farm
+
+❌ Invisibilidade não funciona
+SOLUÇÕES:
+- Alguns executores têm limitações
+- Tente apenas velocidade
+- Reinicie personagem
+- Use executor mais avançado
+
+❌ Lag/Baixa Performance
+SOLUÇÕES:
+- Reduza distância ESP
+- Desative ESP desnecessários
+- Feche outros scripts
+- Reinicie script
+
+❌ Detectado por anti-cheat
+SOLUÇÕES:
+- Reduza velocidade
+- Aumente delays
+- Pare temporariamente
+- Use modo stealth
+
+=============================================
+
+7. 🔄 ATUALIZAÇÕES
+=============================================
+
+SISTEMA DE AUTO-UPDATE:
+🔄 Script verifica atualizações automaticamente
+📥 Download automático de novas versões
+📝 Changelog mostrado ao atualizar
+🔔 Notificações de novas features
+
+VERIFICAÇÃO MANUAL:
+```lua
+-- Cole isso no executor para forçar update
+loadstring(game:HttpGet("https://raw.githubusercontent.com/YourRepo/BrainrotRobber/main/loader.lua"))()
+```
+
+PRÓXIMAS FEATURES:
+🤖 IA mais avançada
+📊 Dashboard com estatísticas
+🎮 Suporte para mais jogos
+🌐 Sistema de compartilhamento
+🔧 Editor de configs in-game
+
+HISTÓRICO DE VERSÕES:
+v3.0 - Sistema completo com GUI moderna
+v2.0 - IA básica e auto-update
+v1.0 - Funcionalidades básicas
+
+=============================================
+
+📞 SUPORTE E CONTATO
+=============================================
+
+LINKS ÚTEIS:
+🌐 GitHub: https://github.com/YourRepo/BrainrotRobber
+💬 Discord: https://discord.gg/brainrotrobber
+📚 Docs: https://docs.brainrotrobber.com
+
+REPORTAR BUGS:
+🐛 Use o GitHub Issues
+💬 Discord #bug-reports
+📧 Email: support@brainrotrobber.com
+
+SUGESTÕES:
+💡 Discord #suggestions
+🗳️ GitHub Discussions
+📝 Formulário de feedback
+
+=============================================
+
+⚠️ AVISOS LEGAIS
+=============================================
+
+RESPONSABILIDADE:
+- Use por sua conta e risco
+- Respeite outros jogadores
+- Não abuse das funcionalidades
+- Siga ToS do Roblox
+
+ÉTICO:
+- Script para fins educacionais
+- Não prejudique experiência de outros
+- Use com moderação
+- Seja respeitoso
+
+=============================================
+
+🎉 DIVIRTA-SE ROUBANDO BRAINROTS! 🧠
+Desenvolvido com ❤️ para a comunidade Roblox
+
+Última atualização: 15/09/2025
+Versão: 3.0
+=============================================
